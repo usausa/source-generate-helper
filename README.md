@@ -1,1 +1,1 @@
-# generator-common
+# generator-helper
