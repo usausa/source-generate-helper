@@ -8,7 +8,7 @@ public static class RoslynExtensions
     // Accessibility
     // ------------------------------------------------------------
 
-    public static string ToAccessibilityText(Accessibility accessibility) => accessibility switch
+    public static string ToText(this Accessibility accessibility) => accessibility switch
     {
         Accessibility.Public => "public",
         Accessibility.Protected => "protected",
