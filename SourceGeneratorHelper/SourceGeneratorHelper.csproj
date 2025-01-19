@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageId>BunnyTail.SourceGeneratorHelper</PackageId>
-    <Title>BunnyTail.SourceGeneratorHelper</Title>
+    <PackageId>SourceGeneratorHelper</PackageId>
+    <Title>SourceGeneratorHelper</Title>
     <Description>Source generator helper.</Description>
     <PackageTags>sourcegenerator</PackageTags>
   </PropertyGroup>

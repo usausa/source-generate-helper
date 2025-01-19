@@ -185,7 +185,7 @@ public sealed class SourceBuilderTest
             .Append(" IEnumerable")
             .Generics("TResult")
             .Append(" Convert")
-            .Generics(["TSource", "TResult"])
+            .Generics("TSource", "TResult")
             .Append('(')
             .Arguments([("IEnumerable<TSource>", "source"), ("Func<TSource, TResult>", "converter")])
             .Append(')')
