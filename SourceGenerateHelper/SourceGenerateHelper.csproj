@@ -6,10 +6,10 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageId>SourceGeneratorHelper</PackageId>
-    <Title>SourceGeneratorHelper</Title>
+    <PackageId>SourceGenerateHelper</PackageId>
+    <Title>SourceGenerateHelper</Title>
     <Description>Source generator helper.</Description>
-    <PackageTags>sourcegenerator</PackageTags>
+    <PackageTags>SourceGenerate</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

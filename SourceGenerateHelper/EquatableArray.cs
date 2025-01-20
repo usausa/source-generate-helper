@@ -1,4 +1,4 @@
-namespace SourceGeneratorHelper;
+namespace SourceGenerateHelper;
 
 public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>
 {

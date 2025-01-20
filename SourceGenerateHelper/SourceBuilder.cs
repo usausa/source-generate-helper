@@ -1,4 +1,4 @@
-namespace SourceGeneratorHelper;
+namespace SourceGenerateHelper;
 
 using System.Diagnostics;
 using System.Globalization;

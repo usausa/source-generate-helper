@@ -1,4 +1,4 @@
-namespace SourceGeneratorHelper.Tests;
+namespace SourceGenerateHelper.Tests;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;

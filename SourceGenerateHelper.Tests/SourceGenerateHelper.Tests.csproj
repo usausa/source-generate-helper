@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -23,7 +23,7 @@
 
 
   <ItemGroup>
-    <ProjectReference Include="..\SourceGeneratorHelper\SourceGeneratorHelper.csproj" />
+    <ProjectReference Include="..\SourceGenerateHelper\SourceGenerateHelper.csproj" />
   </ItemGroup>
 
 </Project>

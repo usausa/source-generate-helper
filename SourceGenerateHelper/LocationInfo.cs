@@ -1,4 +1,4 @@
-namespace SourceGeneratorHelper;
+namespace SourceGenerateHelper;
 
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis;
