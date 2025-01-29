@@ -2,7 +2,7 @@ namespace SourceGenerateHelper;
 
 using Microsoft.CodeAnalysis;
 
-internal static class RoslynExtensions
+public static class RoslynExtensions
 {
     public static string ToText(this Accessibility accessibility) => accessibility switch
     {

@@ -2,7 +2,7 @@ namespace SourceGenerateHelper;
 
 using Microsoft.CodeAnalysis;
 
-internal static class DiagnosticExtensions
+public static class DiagnosticExtensions
 {
     public static void ReportDiagnostic(this SourceProductionContext context, DiagnosticInfo info)
     {

@@ -4,7 +4,7 @@ using System.ComponentModel;
 
 using Microsoft.CodeAnalysis.Diagnostics;
 
-internal static class AnalyzerConfigExtensions
+public static class AnalyzerConfigExtensions
 {
     public static T GetValue<T>(this AnalyzerConfigOptions options, string key)
     {
