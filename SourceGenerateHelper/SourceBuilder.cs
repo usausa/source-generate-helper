@@ -63,12 +63,6 @@ public sealed class SourceBuilder
         return this;
     }
 
-    public SourceBuilder Append(char value)
-    {
-        buffer.Append(value);
-        return this;
-    }
-
     public SourceBuilder Append(string value)
     {
         buffer.Append(value);
