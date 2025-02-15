@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="Analyzers.ruleset" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+    <File Path="SourceGenerateHelper.sln.DotSettings" />
+    <File Path="test.runsettings" />
+  </Folder>
+  <Project Path="SourceGenerateHelper/SourceGenerateHelper.csproj" />
+  <Project Path="SourceGenerateHelper.Tests/SourceGenerateHelper.Tests.csproj" />
+</Solution>
