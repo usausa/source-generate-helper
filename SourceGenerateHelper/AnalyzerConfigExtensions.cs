@@ -1,6 +1,7 @@
 namespace SourceGenerateHelper;
 
-using System.ComponentModel;
+using System.Globalization;
+using System.Runtime.CompilerServices;
 
 using Microsoft.CodeAnalysis.Diagnostics;
 
@@ -12,14 +13,10 @@ public static class AnalyzerConfigExtensions
         {
             if (typeof(T) == typeof(string))
             {
-                return (T)(object)value;
+                return Unsafe.As<string, T>(ref value);
             }
 
-            var converter = TypeDescriptor.GetConverter(typeof(T));
-            if (converter.CanConvertFrom(typeof(string)))
-            {
-                return (T)converter.ConvertFrom(value)!;
-            }
+            return (T)Convert.ChangeType(value, Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T), CultureInfo.InvariantCulture);
         }
 
         return default!;
