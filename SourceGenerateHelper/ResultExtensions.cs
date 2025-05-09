@@ -7,7 +7,7 @@ public static class ResultExtensions
 {
     public static IEnumerable<TValue> SelectValue<TValue>(this IEnumerable<Result<TValue>> source)
         where TValue : IEquatable<TValue> =>
-        source.Select(static x => x.Value);
+        source.Select(static x => x.Value).OfType<TValue>();
 
     public static IEnumerable<DiagnosticInfo> SelectError<TValue>(this IEnumerable<Result<TValue>> source)
         where TValue : IEquatable<TValue> =>
