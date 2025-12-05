@@ -21,6 +21,34 @@ public static class SourceBuilderExtensions
         condition ? builder.AppendJoin(source, separator) : builder;
 
     // ------------------------------------------------------------
+    // Apply
+    // ------------------------------------------------------------
+
+    public static SourceBuilder AppendBy(this SourceBuilder builder, Action<SourceBuilder> action)
+    {
+        action(builder);
+        return builder;
+    }
+
+    public static SourceBuilder AppendBy<T1>(this SourceBuilder builder, T1 p1, Action<SourceBuilder, T1> action)
+    {
+        action(builder, p1);
+        return builder;
+    }
+
+    public static SourceBuilder AppendBy<T1, T2>(this SourceBuilder builder, T1 p1, T2 p2, Action<SourceBuilder, T1, T2> action)
+    {
+        action(builder, p1, p2);
+        return builder;
+    }
+
+    public static SourceBuilder AppendBy<T1, T2, T3>(this SourceBuilder builder, T1 p1, T2 p2, T3 p3, Action<SourceBuilder, T1, T2, T3> action)
+    {
+        action(builder, p1, p2, p3);
+        return builder;
+    }
+
+    // ------------------------------------------------------------
     // Helper
     // ------------------------------------------------------------
 
