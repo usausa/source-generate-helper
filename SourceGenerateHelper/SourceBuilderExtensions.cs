@@ -52,22 +52,34 @@ public static class SourceBuilderExtensions
 
     public static SourceBuilder Arguments(this SourceBuilder builder, IEnumerable<(ITypeSymbol Type, string Name)> source)
     {
+        var append = false;
         foreach (var (type, name) in source)
         {
             builder.Type(type).Append(' ').Append(name).Append(", ");
+            append = true;
         }
-        builder.Length -= 2;
+
+        if (append)
+        {
+            builder.Length -= 2;
+        }
 
         return builder;
     }
 
     public static SourceBuilder Arguments(this SourceBuilder builder, IEnumerable<(string Type, string Name)> source)
     {
+        var append = false;
         foreach (var (type, name) in source)
         {
             builder.Append(type).Append(' ').Append(name).Append(", ");
+            append = true;
         }
-        builder.Length -= 2;
+
+        if (append)
+        {
+            builder.Length -= 2;
+        }
 
         return builder;
     }
