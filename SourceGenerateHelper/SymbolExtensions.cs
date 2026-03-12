@@ -29,7 +29,7 @@ public static class SymbolExtensions
 
         foreach (var nestedNamespace in namespaceSymbol.GetNamespaceMembers())
         {
-            foreach (var typeSymbol in GetTypeMembersRecursive(nestedNamespace))
+            foreach (var typeSymbol in nestedNamespace.GetTypeMembersRecursive())
             {
                 yield return typeSymbol;
             }
@@ -48,7 +48,7 @@ public static class SymbolExtensions
 
         foreach (var nestedNamespace in namespaceSymbol.GetNamespaceMembers())
         {
-            foreach (var typeSymbol in GetTypeMembersRecursive(nestedNamespace, predicate))
+            foreach (var typeSymbol in nestedNamespace.GetTypeMembersRecursive(predicate))
             {
                 yield return typeSymbol;
             }
