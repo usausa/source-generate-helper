@@ -20,6 +20,7 @@ public ref struct ValueStringBuilder
         if (arrayFromPool != null)
         {
             ArrayPool<char>.Shared.Return(arrayFromPool);
+            arrayFromPool = null;
         }
     }
 
@@ -67,12 +68,12 @@ public ref struct ValueStringBuilder
         span = arrayFromPool.AsSpan(0, newSize);
     }
 
-    public string ToTrimString()
+    public readonly string ToTrimString()
     {
         return new string(span.Slice(0, pos).Trim().ToArray());
     }
 
-    public override string ToString()
+    public override readonly string ToString()
     {
         return new string(span.Slice(0, pos).ToArray());
     }
