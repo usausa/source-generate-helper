@@ -16,6 +16,11 @@ public static class AnalyzerConfigExtensions
                 return Unsafe.As<string, T>(ref value);
             }
 
+            if (String.IsNullOrEmpty(value))
+            {
+                return default!;
+            }
+
             return (T)Convert.ChangeType(value, Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T), CultureInfo.InvariantCulture);
         }
 
