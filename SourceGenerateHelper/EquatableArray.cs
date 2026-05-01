@@ -1,5 +1,7 @@
 namespace SourceGenerateHelper;
 
+using System.Collections.Generic;
+
 public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>
 {
     private readonly T[] array;
@@ -18,10 +20,11 @@ public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>
     public override int GetHashCode()
     {
         var hash = 0;
+        var comparer = EqualityComparer<T>.Default;
         // ReSharper disable once LoopCanBeConvertedToQuery
         foreach (var item in array)
         {
-            hash ^= item?.GetHashCode() ?? 0;
+            hash ^= item is null ? 0 : comparer.GetHashCode(item);
         }
         return hash;
     }

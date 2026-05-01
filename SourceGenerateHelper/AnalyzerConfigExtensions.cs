@@ -21,7 +21,40 @@ public static class AnalyzerConfigExtensions
                 return default!;
             }
 
-            return (T)Convert.ChangeType(value, Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T), CultureInfo.InvariantCulture);
+            var targetType = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
+
+            if (targetType == typeof(int))
+            {
+                var result = int.Parse(value, CultureInfo.InvariantCulture);
+                return Unsafe.As<int, T>(ref result);
+            }
+            if (targetType == typeof(bool))
+            {
+                var result = bool.Parse(value);
+                return Unsafe.As<bool, T>(ref result);
+            }
+            if (targetType == typeof(long))
+            {
+                var result = long.Parse(value, CultureInfo.InvariantCulture);
+                return Unsafe.As<long, T>(ref result);
+            }
+            if (targetType == typeof(double))
+            {
+                var result = double.Parse(value, CultureInfo.InvariantCulture);
+                return Unsafe.As<double, T>(ref result);
+            }
+            if (targetType == typeof(float))
+            {
+                var result = float.Parse(value, CultureInfo.InvariantCulture);
+                return Unsafe.As<float, T>(ref result);
+            }
+            if (targetType == typeof(decimal))
+            {
+                var result = decimal.Parse(value, CultureInfo.InvariantCulture);
+                return Unsafe.As<decimal, T>(ref result);
+            }
+
+            return (T)Convert.ChangeType(value, targetType, CultureInfo.InvariantCulture);
         }
 
         return default!;
