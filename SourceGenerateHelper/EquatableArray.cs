@@ -4,6 +4,8 @@ using System.Collections.Generic;
 
 public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>
 {
+    public static readonly EquatableArray<T> Empty = new([]);
+
     private readonly T[] array;
 
     public EquatableArray(T[] array)
@@ -11,7 +13,13 @@ public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>
         this.array = array;
     }
 
-    public T[] ToArray() => array;
+    public T[] AsArray() => array;
+
+#pragma warning disable CA2225
+    public static implicit operator T[](EquatableArray<T> value) => value.array;
+
+    public static implicit operator EquatableArray<T>(T[] value) => new(value);
+#pragma warning restore CA2225
 
     public bool Equals(EquatableArray<T> other) => array.SequenceEqual(other.array);
 
