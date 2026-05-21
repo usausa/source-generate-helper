@@ -10,12 +10,14 @@ public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>
 
     private readonly T[] array;
 
-    public ReadOnlySpan<T> Span => array;
-
     public EquatableArray(T[] array)
     {
         this.array = array;
     }
+
+    public Span<T> AsSpan() => array;
+
+    public T[] AsArray() => array;
 
 #pragma warning disable CA2225
     public static implicit operator T[](EquatableArray<T> value) => value.array;
