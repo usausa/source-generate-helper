@@ -4,16 +4,18 @@ using System.Collections.Generic;
 
 public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>
 {
+#pragma warning disable IDE0051
     public static readonly EquatableArray<T> Empty = new([]);
+#pragma warning restore IDE0051
 
     private readonly T[] array;
+
+    public ReadOnlySpan<T> Span => array;
 
     public EquatableArray(T[] array)
     {
         this.array = array;
     }
-
-    public T[] AsArray() => array;
 
 #pragma warning disable CA2225
     public static implicit operator T[](EquatableArray<T> value) => value.array;
