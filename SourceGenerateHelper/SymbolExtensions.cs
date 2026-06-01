@@ -49,7 +49,7 @@ public static class SymbolExtensions
 
     public static string GetClassName(this INamedTypeSymbol symbol) =>
         symbol.IsGenericType
-            ? $"{symbol.Name}<{string.Join(", ", symbol.TypeArguments.Select(static x => x.Name))}>"
+            ? $"{symbol.Name}<{String.Join(", ", symbol.TypeArguments.Select(static x => x.Name))}>"
             : symbol.Name;
 
     public static bool IsGenericType(this ITypeSymbol symbol) =>
