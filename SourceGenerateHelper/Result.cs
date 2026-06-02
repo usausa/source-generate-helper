@@ -1,15 +1,15 @@
 namespace SourceGenerateHelper;
 
-public sealed record Result<TValue>(TValue Value, DiagnosticInfo? Error)
+public sealed record Result<TValue>(TValue Value, EquatableArray<DiagnosticInfo> Diagnostics)
     where TValue : IEquatable<TValue>;
 
 public static class Results
 {
     public static Result<TValue> Success<TValue>(TValue value)
         where TValue : IEquatable<TValue>
-        => new(value, null);
+        => new(value, EquatableArray<DiagnosticInfo>.Empty);
 
-    public static Result<TValue> Error<TValue>(DiagnosticInfo? error)
+    public static Result<TValue> Error<TValue>(DiagnosticInfo[] diagnostics)
         where TValue : IEquatable<TValue>
-        => new(default!, error);
+        => new(default!, diagnostics);
 }

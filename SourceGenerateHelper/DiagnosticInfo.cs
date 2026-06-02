@@ -5,6 +5,20 @@ using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
+public record LocationInfo(string FilePath, TextSpan TextSpan, LinePositionSpan LineSpan)
+{
+    public Location ToLocation() =>
+        Location.Create(FilePath, TextSpan, LineSpan);
+
+    public static LocationInfo? CreateFrom(SyntaxNode node) =>
+        CreateFrom(node.GetLocation());
+
+    public static LocationInfo? CreateFrom(Location location) =>
+        location.SourceTree is null
+            ? null
+            : new LocationInfo(location.SourceTree.FilePath, location.SourceSpan, location.GetLineSpan().Span);
+}
+
 #pragma warning disable CA1819
 public sealed record DiagnosticInfo
 {
@@ -14,12 +28,12 @@ public sealed record DiagnosticInfo
 
     public ImmutableDictionary<string, string?>? Properties { get; }
 
-    public string? MessageArg { get; }
+    public EquatableArray<string> MessageArgs { get; }
 
     public DiagnosticInfo(
         DiagnosticDescriptor descriptor,
         Location? location)
-        : this(descriptor, location, null, null)
+        : this(descriptor, location, (ImmutableDictionary<string, string?>?)null, null)
     {
     }
 
@@ -34,8 +48,8 @@ public sealed record DiagnosticInfo
     public DiagnosticInfo(
         DiagnosticDescriptor descriptor,
         Location? location,
-        string? messageArg)
-        : this(descriptor, location, null, messageArg)
+        params string[]? messageArgs)
+        : this(descriptor, location, null, messageArgs)
     {
     }
 
@@ -43,26 +57,15 @@ public sealed record DiagnosticInfo
         DiagnosticDescriptor descriptor,
         Location? location,
         ImmutableDictionary<string, string?>? properties,
-        string? messageArg)
+        params string[]? messageArgs)
     {
         Descriptor = descriptor;
         Location = location is not null ? LocationInfo.CreateFrom(location) : null;
         Properties = properties;
-        MessageArg = messageArg;
+        MessageArgs = messageArgs ?? EquatableArray<string>.Empty;
     }
+
+    // ReSharper disable once CoVariantArrayConversion
+    public Diagnostic ToDiagnostic() => Diagnostic.Create(Descriptor, Location?.ToLocation(), MessageArgs.AsArray());
 }
 #pragma warning restore CA1819
-
-public record LocationInfo(string FilePath, TextSpan TextSpan, LinePositionSpan LineSpan)
-{
-    public Location ToLocation() =>
-        Location.Create(FilePath, TextSpan, LineSpan);
-
-    public static LocationInfo? CreateFrom(SyntaxNode node) =>
-        CreateFrom(node.GetLocation());
-
-    public static LocationInfo? CreateFrom(Location location) =>
-        location.SourceTree is null
-            ? null
-            : new LocationInfo(location.SourceTree.FilePath, location.SourceSpan, location.GetLineSpan().Span);
-}

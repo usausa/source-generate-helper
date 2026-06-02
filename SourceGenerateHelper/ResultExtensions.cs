@@ -11,5 +11,5 @@ public static class ResultExtensions
 
     public static IEnumerable<DiagnosticInfo> SelectError<TValue>(this IEnumerable<Result<TValue>> source)
         where TValue : IEquatable<TValue> =>
-        source.Select(static x => x.Error).OfType<DiagnosticInfo>();
+        source.SelectMany(static x => x.Diagnostics);
 }

@@ -2,7 +2,7 @@ namespace SourceGenerateHelper;
 
 using System.Collections.Generic;
 
-public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>
+public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IReadOnlyList<T>
 {
 #pragma warning disable IDE0051
     public static readonly EquatableArray<T> Empty = new([]);
@@ -18,6 +18,14 @@ public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>
     public Span<T> AsSpan() => array;
 
     public T[] AsArray() => array;
+
+    public int Count => array.Length;
+
+    public T this[int index] => array[index];
+
+    public IEnumerator<T> GetEnumerator() => ((IReadOnlyList<T>)array).GetEnumerator();
+
+    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => array.GetEnumerator();
 
 #pragma warning disable CA2225
     public static implicit operator T[](EquatableArray<T> value) => value.array;
