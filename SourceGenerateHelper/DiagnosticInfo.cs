@@ -66,6 +66,6 @@ public sealed record DiagnosticInfo
     }
 
     // ReSharper disable once CoVariantArrayConversion
-    public Diagnostic ToDiagnostic() => Diagnostic.Create(Descriptor, Location?.ToLocation(), MessageArgs.AsArray());
+    public Diagnostic ToDiagnostic() => Diagnostic.Create(Descriptor, Location?.ToLocation(), MessageArgs);
 }
 #pragma warning restore CA1819

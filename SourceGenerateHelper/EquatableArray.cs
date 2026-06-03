@@ -15,10 +15,6 @@ public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IReadO
         this.array = array;
     }
 
-    public Span<T> AsSpan() => array;
-
-    public T[] AsArray() => array;
-
     public int Count => array.Length;
 
     public T this[int index] => array[index];
