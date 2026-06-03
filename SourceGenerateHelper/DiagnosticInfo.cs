@@ -55,12 +55,32 @@ public sealed record DiagnosticInfo
 
     public DiagnosticInfo(
         DiagnosticDescriptor descriptor,
+        LocationInfo? location,
+        params string[]? messageArgs)
+        : this(descriptor, location, null, messageArgs)
+    {
+    }
+
+    public DiagnosticInfo(
+        DiagnosticDescriptor descriptor,
         Location? location,
         ImmutableDictionary<string, string?>? properties,
         params string[]? messageArgs)
     {
         Descriptor = descriptor;
         Location = location is not null ? LocationInfo.CreateFrom(location) : null;
+        Properties = properties;
+        MessageArgs = messageArgs ?? EquatableArray<string>.Empty;
+    }
+
+    public DiagnosticInfo(
+        DiagnosticDescriptor descriptor,
+        LocationInfo? location,
+        ImmutableDictionary<string, string?>? properties,
+        params string[]? messageArgs)
+    {
+        Descriptor = descriptor;
+        Location = location;
         Properties = properties;
         MessageArgs = messageArgs ?? EquatableArray<string>.Empty;
     }
