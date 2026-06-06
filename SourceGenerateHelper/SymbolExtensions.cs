@@ -56,6 +56,61 @@ public static class SymbolExtensions
         symbol is INamedTypeSymbol { IsGenericType: true } or ITypeParameterSymbol;
 
     // ------------------------------------------------------------
+    // Nullable
+    // ------------------------------------------------------------
+
+    public static bool IsNullableType(this ITypeSymbol type)
+    {
+        if (type.NullableAnnotation == NullableAnnotation.Annotated)
+        {
+            return true;
+        }
+
+        if (type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    public static ITypeSymbol GetUnderlyingType(this ITypeSymbol type)
+    {
+        if ((type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T) &&
+            (type is INamedTypeSymbol namedType) &&
+            (namedType.TypeArguments.Length == 1))
+        {
+            return namedType.TypeArguments[0];
+        }
+
+        if ((type.NullableAnnotation == NullableAnnotation.Annotated) &&
+            (type is INamedTypeSymbol refType))
+        {
+            return refType.WithNullableAnnotation(NullableAnnotation.NotAnnotated);
+        }
+
+        return type;
+    }
+
+    // ------------------------------------------------------------
+    // Base
+    // ------------------------------------------------------------
+
+    public static bool InheritsFrom(this ITypeSymbol typeSymbol, string baseTypeFullName)
+    {
+        for (var current = typeSymbol; current is not null; current = current.BaseType)
+        {
+            if ((current.ToDisplayString() == baseTypeFullName) ||
+                (current.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == $"global::{baseTypeFullName}"))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // ------------------------------------------------------------
     // Assignable
     // ------------------------------------------------------------
 
@@ -109,43 +164,6 @@ public static class SymbolExtensions
             (i.OriginalDefinition.ToDisplayString() == metadataName) ||
             (i.OriginalDefinition.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == $"global::{metadataName}") ||
             (i.OriginalDefinition.MetadataName == metadataName.Split('.').Last()));
-
-    // ------------------------------------------------------------
-    // Nullable
-    // ------------------------------------------------------------
-
-    public static bool IsNullableType(this ITypeSymbol type)
-    {
-        if (type.NullableAnnotation == NullableAnnotation.Annotated)
-        {
-            return true;
-        }
-
-        if (type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
-        {
-            return true;
-        }
-
-        return false;
-    }
-
-    public static ITypeSymbol GetUnderlyingType(this ITypeSymbol type)
-    {
-        if ((type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T) &&
-            (type is INamedTypeSymbol namedType) &&
-            (namedType.TypeArguments.Length == 1))
-        {
-            return namedType.TypeArguments[0];
-        }
-
-        if ((type.NullableAnnotation == NullableAnnotation.Annotated) &&
-            (type is INamedTypeSymbol refType))
-        {
-            return refType.WithNullableAnnotation(NullableAnnotation.NotAnnotated);
-        }
-
-        return type;
-    }
 
     // -------------------------------------------------------
     // Collection
@@ -213,4 +231,25 @@ public static class SymbolExtensions
             SpecialType.System_UInt32 or
             SpecialType.System_Int64 or
             SpecialType.System_UInt64;
+
+    // ------------------------------------------------------------
+    // Enum
+    // ------------------------------------------------------------
+
+    public static ITypeSymbol? GetEnumUnderlyingType(this ITypeSymbol type)
+    {
+        if ((type is INamedTypeSymbol { IsGenericType: true } nullableType) &&
+            (nullableType.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T) &&
+            (nullableType.TypeArguments[0] is INamedTypeSymbol { TypeKind: TypeKind.Enum } innerEnum))
+        {
+            return innerEnum.EnumUnderlyingType;
+        }
+
+        if (type is INamedTypeSymbol { TypeKind: TypeKind.Enum } namedEnum)
+        {
+            return namedEnum.EnumUnderlyingType;
+        }
+
+        return null;
+    }
 }
