@@ -8,39 +8,41 @@ public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IReadO
     public static readonly EquatableArray<T> Empty = new([]);
 #pragma warning restore IDE0051
 
-    private readonly T[] array;
+    private readonly T[]? array;
 
     public EquatableArray(T[] array)
     {
         this.array = array;
     }
 
-    public int Count => array.Length;
+    private T[] Values => array ?? [];
 
-    public T this[int index] => array[index];
+    public int Count => Values.Length;
 
-    public IEnumerator<T> GetEnumerator() => ((IReadOnlyList<T>)array).GetEnumerator();
+    public T this[int index] => Values[index];
 
-    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => array.GetEnumerator();
+    public IEnumerator<T> GetEnumerator() => ((IReadOnlyList<T>)Values).GetEnumerator();
+
+    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => Values.GetEnumerator();
 
 #pragma warning disable CA2225
-    public static implicit operator T[](EquatableArray<T> value) => value.array;
+    public static implicit operator T[](EquatableArray<T> value) => value.Values;
 
     public static implicit operator EquatableArray<T>(T[] value) => new(value);
 #pragma warning restore CA2225
 
-    public bool Equals(EquatableArray<T> other) => array.SequenceEqual(other.array);
+    public bool Equals(EquatableArray<T> other) => Values.SequenceEqual(other.Values);
 
     public override bool Equals(object? obj) => obj is EquatableArray<T> other && Equals(other);
 
     public override int GetHashCode()
     {
-        var hash = 0;
+        var hash = 17;
         var comparer = EqualityComparer<T>.Default;
         // ReSharper disable once LoopCanBeConvertedToQuery
-        foreach (var item in array)
+        foreach (var item in Values)
         {
-            hash ^= item is null ? 0 : comparer.GetHashCode(item);
+            hash = (hash * 31) + (item is null ? 0 : comparer.GetHashCode(item));
         }
         return hash;
     }

@@ -208,6 +208,31 @@ public sealed class SourceBuilderTest
     }
 
     [Fact]
+    public void AppendJoinEmpty()
+    {
+        var builder = new SourceBuilder();
+        builder.Append("a");
+        builder.AppendJoin(Array.Empty<int>(), ", ");
+        Assert.Equal("a", builder.ToString());
+    }
+
+    [Fact]
+    public void AppendJoinSingle()
+    {
+        var builder = new SourceBuilder();
+        builder.AppendJoin([1], ", ");
+        Assert.Equal("1", builder.ToString());
+    }
+
+    [Fact]
+    public void AppendJoinMultiple()
+    {
+        var builder = new SourceBuilder();
+        builder.AppendJoin([1, 2, 3], ", ");
+        Assert.Equal("1, 2, 3", builder.ToString());
+    }
+
+    [Fact]
     public void TestBySymbol()
     {
         const string source =

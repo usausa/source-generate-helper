@@ -86,13 +86,18 @@ public sealed class SourceBuilder
 
     public SourceBuilder AppendJoin<T>(IEnumerable<T> source, string separator)
     {
+        var appended = false;
         foreach (var value in source)
         {
             buffer.Append(value);
             buffer.Append(separator);
+            appended = true;
         }
 
-        buffer.Length -= separator.Length;
+        if (appended)
+        {
+            buffer.Length -= separator.Length;
+        }
         return this;
     }
 }
