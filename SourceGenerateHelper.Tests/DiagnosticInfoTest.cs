@@ -154,12 +154,40 @@ public sealed class DiagnosticInfoTest
     }
 
     [Fact]
-    public void SeparatePropertiesInstancesWithSameContentAreNotEqual()
+    public void SeparatePropertiesInstancesWithSameContentAreEqual()
     {
         // Arrange
         var descriptor = CreateDescriptor();
         var propertiesA = ImmutableDictionary<string, string?>.Empty.Add("K", "V");
         var propertiesB = ImmutableDictionary<string, string?>.Empty.Add("K", "V");
+        var a = new DiagnosticInfo(descriptor, (Location?)null, propertiesA);
+        var b = new DiagnosticInfo(descriptor, (Location?)null, propertiesB);
+
+        // Act & Assert
+        Assert.Equal(a, b);
+    }
+
+    [Fact]
+    public void SeparatePropertiesInstancesWithSameContentHaveSameHashCode()
+    {
+        // Arrange
+        var descriptor = CreateDescriptor();
+        var propertiesA = ImmutableDictionary<string, string?>.Empty.Add("K", "V");
+        var propertiesB = ImmutableDictionary<string, string?>.Empty.Add("K", "V");
+        var a = new DiagnosticInfo(descriptor, (Location?)null, propertiesA);
+        var b = new DiagnosticInfo(descriptor, (Location?)null, propertiesB);
+
+        // Act & Assert
+        Assert.Equal(a.GetHashCode(), b.GetHashCode());
+    }
+
+    [Fact]
+    public void DifferentPropertiesContentAreNotEqual()
+    {
+        // Arrange
+        var descriptor = CreateDescriptor();
+        var propertiesA = ImmutableDictionary<string, string?>.Empty.Add("K", "V1");
+        var propertiesB = ImmutableDictionary<string, string?>.Empty.Add("K", "V2");
         var a = new DiagnosticInfo(descriptor, (Location?)null, propertiesA);
         var b = new DiagnosticInfo(descriptor, (Location?)null, propertiesB);
 

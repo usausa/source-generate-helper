@@ -26,7 +26,7 @@ public static class AnalyzerConfigExtensions
 
         try
         {
-            return ConvertValue<T>(value!);
+            return ConvertValue<T>(value);
         }
         catch (Exception ex) when (ex is FormatException or InvalidCastException or OverflowException or ArgumentException)
         {
@@ -56,7 +56,7 @@ public static class AnalyzerConfigExtensions
 
         try
         {
-            value = ConvertValue<T>(raw!);
+            value = ConvertValue<T>(raw);
             return true;
         }
         catch (Exception ex) when (ex is FormatException or InvalidCastException or OverflowException or ArgumentException)
