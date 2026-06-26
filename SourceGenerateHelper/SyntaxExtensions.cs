@@ -23,7 +23,7 @@ public static class SyntaxExtensions
                     break;
                 }
 
-                ns = $"{namespaceSyntax.Name}.{ns}";
+                ns = $"{parent.Name}.{ns}";
                 namespaceSyntax = parent;
             }
         }

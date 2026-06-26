@@ -320,4 +320,49 @@ public sealed class SourceBuilderTest
         // Assert
         Assert.Equal(source, builder.ToString());
     }
+
+    // ------------------------------------------------------------
+    // Generics
+    // ------------------------------------------------------------
+
+    [Fact]
+    public void GenericsEmptyStringArrayDoesNotCorrupt()
+    {
+        // Arrange
+        var builder = new SourceBuilder();
+        builder.Append("Foo");
+
+        // Act
+        builder.Generics(Array.Empty<string>());
+
+        // Assert
+        Assert.Equal("Foo", builder.ToString());
+    }
+
+    [Fact]
+    public void GenericsEmptyTypeArrayDoesNotCorrupt()
+    {
+        // Arrange
+        var builder = new SourceBuilder();
+        builder.Append("Foo");
+
+        // Act
+        builder.Generics(Array.Empty<ITypeSymbol>());
+
+        // Assert
+        Assert.Equal("Foo", builder.ToString());
+    }
+
+    [Fact]
+    public void GenericsMultipleStrings()
+    {
+        // Arrange
+        var builder = new SourceBuilder();
+
+        // Act
+        builder.Generics("A", "B");
+
+        // Assert
+        Assert.Equal("<A, B>", builder.ToString());
+    }
 }

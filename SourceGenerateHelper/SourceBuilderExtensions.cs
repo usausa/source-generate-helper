@@ -120,6 +120,11 @@ public static class SourceBuilderExtensions
 
     public static SourceBuilder Generics(this SourceBuilder builder, params ITypeSymbol[] types)
     {
+        if (types.Length == 0)
+        {
+            return builder;
+        }
+
         builder.Append('<');
         foreach (var type in types)
         {
@@ -133,6 +138,11 @@ public static class SourceBuilderExtensions
 
     public static SourceBuilder Generics(this SourceBuilder builder, params string[] types)
     {
+        if (types.Length == 0)
+        {
+            return builder;
+        }
+
         builder.Append('<');
         foreach (var type in types)
         {

@@ -1,7 +1,12 @@
 namespace SourceGenerateHelper;
 
 public sealed record Result<TValue>(TValue Value, EquatableArray<DiagnosticInfo> Diagnostics)
-    where TValue : IEquatable<TValue>;
+    where TValue : IEquatable<TValue>
+{
+    public bool IsError => Diagnostics.Count > 0;
+
+    public bool IsSuccess => Diagnostics.Count == 0;
+}
 
 public static class Results
 {
