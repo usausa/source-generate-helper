@@ -176,8 +176,13 @@ public static class SymbolExtensions
             return arrayType.ElementType;
         }
 
-        if (collectionType is INamedTypeSymbol namedType && namedType.IsGenericType)
+        if (collectionType is INamedTypeSymbol { IsGenericType: true } namedType)
         {
+            if (namedType.ConstructedFrom.ToDisplayString() == "System.Collections.Generic.IEnumerable<T>")
+            {
+                return namedType.TypeArguments[0];
+            }
+
             foreach (var iface in namedType.AllInterfaces)
             {
                 if (iface.IsGenericType &&
@@ -185,11 +190,6 @@ public static class SymbolExtensions
                 {
                     return iface.TypeArguments[0];
                 }
-            }
-
-            if (namedType.TypeArguments.Length == 1)
-            {
-                return namedType.TypeArguments[0];
             }
         }
 

@@ -453,6 +453,45 @@ public sealed class SymbolExtensionsTest
         Assert.Null(intSymbol.GetCollectionElementType());
     }
 
+    [Fact]
+    public void GetCollectionElementTypeForEnumerableItself()
+    {
+        // Arrange
+        var compilation = CreateCompilation(TestSource);
+        var intSymbol = compilation.GetTypeByMetadataName("System.Int32")!;
+        var enumerableInt = compilation.GetTypeByMetadataName("System.Collections.Generic.IEnumerable`1")!.Construct(intSymbol);
+
+        // Act
+        var elementType = enumerableInt.GetCollectionElementType();
+
+        // Assert
+        Assert.Equal(SpecialType.System_Int32, elementType!.SpecialType);
+    }
+
+    [Fact]
+    public void GetCollectionElementTypeNullForNullable()
+    {
+        // Arrange
+        var compilation = CreateCompilation(TestSource);
+        var intSymbol = compilation.GetTypeByMetadataName("System.Int32")!;
+        var nullableInt = compilation.GetTypeByMetadataName("System.Nullable`1")!.Construct(intSymbol);
+
+        // Act & Assert
+        Assert.Null(nullableInt.GetCollectionElementType());
+    }
+
+    [Fact]
+    public void GetCollectionElementTypeNullForGenericNonCollection()
+    {
+        // Arrange
+        var compilation = CreateCompilation(TestSource);
+        var intSymbol = compilation.GetTypeByMetadataName("System.Int32")!;
+        var myClassInt = compilation.GetTypeByMetadataName("MyNs.MyClass`1")!.Construct(intSymbol);
+
+        // Act & Assert
+        Assert.Null(myClassInt.GetCollectionElementType());
+    }
+
     // ------------------------------------------------------------------
     // GetAllPublicProperties
     // ------------------------------------------------------------------
