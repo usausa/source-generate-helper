@@ -8,7 +8,6 @@ public sealed class AnalyzerConfigExtensionsTest
 {
     private enum Color
     {
-        Red,
         Green,
         Blue
     }
