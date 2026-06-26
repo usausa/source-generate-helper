@@ -25,7 +25,7 @@ public sealed class SourceBuilder
         set
         {
             indentLevel = value;
-            indent = new string(' ', indentLevel * 4);
+            indent = new string(' ', value * 4);
         }
     }
 

@@ -365,4 +365,28 @@ public sealed class SourceBuilderTest
         // Assert
         Assert.Equal("<A, B>", builder.ToString());
     }
+
+    // ------------------------------------------------------------
+    // IndentLevel
+    // ------------------------------------------------------------
+
+    [Fact]
+    public void NegativeIndentLevelThrows()
+    {
+        // Arrange
+        var builder = new SourceBuilder();
+
+        // Act & Assert
+        Assert.Throws<ArgumentOutOfRangeException>(() => { builder.IndentLevel = -1; });
+    }
+
+    [Fact]
+    public void EndScopeOverCallThrows()
+    {
+        // Arrange
+        var builder = new SourceBuilder();
+
+        // Act & Assert
+        Assert.Throws<ArgumentOutOfRangeException>(() => { builder.EndScope(); });
+    }
 }
