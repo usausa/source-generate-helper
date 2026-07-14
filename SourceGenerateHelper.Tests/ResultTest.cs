@@ -114,4 +114,42 @@ public sealed class ResultTest
         // Assert
         Assert.Equal(3, errors.Count);
     }
+
+    // ------------------------------------------------------------------
+    // HasValue
+    // ------------------------------------------------------------------
+
+    [Fact]
+    public void HasValueTrueForSuccess()
+    {
+        // Act
+        var result = Results.Success("hello");
+
+        // Assert
+        Assert.True(result.HasValue);
+    }
+
+    [Fact]
+    public void HasValueFalseForError()
+    {
+        // Act
+        var result = Results.Error<string>(CreateDiagnostic("TST0001"));
+
+        // Assert
+        Assert.False(result.HasValue);
+    }
+
+    [Fact]
+    public void HasValueGuaranteesNonNullValue()
+    {
+        // Act
+        var result = Results.Success("hello");
+
+        // Assert
+        if (result.HasValue)
+        {
+            // Value is statically known to be non-null after HasValue check
+            Assert.Equal(5, result.Value.Length);
+        }
+    }
 }

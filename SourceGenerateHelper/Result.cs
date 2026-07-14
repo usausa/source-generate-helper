@@ -1,11 +1,16 @@
 namespace SourceGenerateHelper;
 
+using System.Diagnostics.CodeAnalysis;
+
 public sealed record Result<TValue>(TValue Value, EquatableArray<DiagnosticInfo> Diagnostics)
     where TValue : IEquatable<TValue>
 {
     public bool IsError => Diagnostics.Count > 0;
 
     public bool IsSuccess => Diagnostics.Count == 0;
+
+    [MemberNotNullWhen(true, nameof(Value))]
+    public bool HasValue => Value is not null;
 }
 
 public static class Results
