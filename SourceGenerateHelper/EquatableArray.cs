@@ -21,7 +21,11 @@ public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IReadO
 
     public T this[int index] => Values[index];
 
-    public IEnumerator<T> GetEnumerator() => ((IReadOnlyList<T>)Values).GetEnumerator();
+    public ReadOnlySpan<T> AsSpan() => Values;
+
+    public Enumerator GetEnumerator() => new(Values);
+
+    IEnumerator<T> IEnumerable<T>.GetEnumerator() => ((IReadOnlyList<T>)Values).GetEnumerator();
 
     System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => Values.GetEnumerator();
 
@@ -50,4 +54,33 @@ public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IReadO
     public static bool operator ==(EquatableArray<T> left, EquatableArray<T> right) => left.Equals(right);
 
     public static bool operator !=(EquatableArray<T> left, EquatableArray<T> right) => !left.Equals(right);
+
+    public struct Enumerator : IEquatable<Enumerator>
+    {
+        private readonly T[] values;
+
+        private int index;
+
+        internal Enumerator(T[] values)
+        {
+            this.values = values;
+            index = -1;
+        }
+
+        public readonly T Current => values[index];
+
+        public bool MoveNext() => ++index < values.Length;
+
+        public readonly bool Equals(Enumerator other) =>
+            ReferenceEquals(values, other.values) && (index == other.index);
+
+        public override readonly bool Equals(object? obj) => obj is Enumerator other && Equals(other);
+
+        public override readonly int GetHashCode() =>
+            (values.GetHashCode() * 31) + index;
+
+        public static bool operator ==(Enumerator left, Enumerator right) => left.Equals(right);
+
+        public static bool operator !=(Enumerator left, Enumerator right) => !left.Equals(right);
+    }
 }

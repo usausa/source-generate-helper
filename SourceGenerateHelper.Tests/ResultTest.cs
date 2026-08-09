@@ -4,9 +4,9 @@ using Microsoft.CodeAnalysis;
 
 public sealed class ResultTest
 {
-    private static DiagnosticInfo CreateDiagnostic(string id)
+    private static DiagnosticInfo CreateDiagnostic(string id, DiagnosticSeverity severity = DiagnosticSeverity.Warning)
     {
-        var descriptor = new DiagnosticDescriptor(id, "Title", "Message", "Test", DiagnosticSeverity.Warning, isEnabledByDefault: true);
+        var descriptor = new DiagnosticDescriptor(id, "Title", "Message", "Test", severity, isEnabledByDefault: true);
         return new DiagnosticInfo(descriptor, (Location?)null);
     }
 
@@ -21,8 +21,9 @@ public sealed class ResultTest
         var result = Results.Success(5);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.False(result.IsError);
+        Assert.False(result.HasDiagnostics);
+        Assert.False(result.HasErrors);
+        Assert.True(result.HasValue);
         Assert.Equal(5, result.Value);
         Assert.Empty(result.Diagnostics);
     }
@@ -37,8 +38,8 @@ public sealed class ResultTest
         var result = Results.Error<int>(diagnostic);
 
         // Assert
-        Assert.True(result.IsError);
-        Assert.False(result.IsSuccess);
+        Assert.True(result.HasDiagnostics);
+        Assert.False(result.HasValue);
         Assert.Single(result.Diagnostics);
     }
 
@@ -53,7 +54,8 @@ public sealed class ResultTest
         var result = Results.Errors<int>(d1, d2);
 
         // Assert
-        Assert.True(result.IsError);
+        Assert.True(result.HasDiagnostics);
+        Assert.False(result.HasValue);
         Assert.Equal(2, result.Diagnostics.Count);
     }
 
@@ -113,6 +115,43 @@ public sealed class ResultTest
 
         // Assert
         Assert.Equal(3, errors.Count);
+    }
+
+    // ------------------------------------------------------------------
+    // Severity
+    // ------------------------------------------------------------------
+
+    [Fact]
+    public void HasErrorsOnlyForErrorSeverity()
+    {
+        // Act
+        var warning = new Result<int>(5, new EquatableArray<DiagnosticInfo>([CreateDiagnostic("TST0001")]));
+        var error = new Result<int>(5, new EquatableArray<DiagnosticInfo>([CreateDiagnostic("TST0002", DiagnosticSeverity.Error)]));
+
+        // Assert
+        Assert.True(warning.HasDiagnostics);
+        Assert.False(warning.HasErrors);
+        Assert.True(error.HasDiagnostics);
+        Assert.True(error.HasErrors);
+    }
+
+    [Fact]
+    public void SelectValueKeepsValueWithDiagnostics()
+    {
+        // Arrange
+        Result<string>[] results =
+        [
+            Results.Success("a"),
+            new("b", new EquatableArray<DiagnosticInfo>([CreateDiagnostic("TST0001")])),
+            new("c", new EquatableArray<DiagnosticInfo>([CreateDiagnostic("TST0002", DiagnosticSeverity.Error)])),
+            Results.Error<string>(CreateDiagnostic("TST0003"))
+        ];
+
+        // Act
+        var values = results.SelectValue().ToList();
+
+        // Assert
+        Assert.Equal(["a", "b", "c"], values);
     }
 
     // ------------------------------------------------------------------

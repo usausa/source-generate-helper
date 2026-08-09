@@ -70,11 +70,11 @@ public ref struct ValueStringBuilder
 
     public readonly string ToTrimString()
     {
-        return new string(span.Slice(0, pos).Trim().ToArray());
+        return span.Slice(0, pos).Trim().ToString();
     }
 
     public override readonly string ToString()
     {
-        return new string(span.Slice(0, pos).ToArray());
+        return span.Slice(0, pos).ToString();
     }
 }
