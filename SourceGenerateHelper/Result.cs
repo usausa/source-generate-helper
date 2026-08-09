@@ -13,6 +13,8 @@ public sealed record Result<TValue>(TValue Value, EquatableArray<DiagnosticInfo>
     {
         get
         {
+            // ReSharper disable once ForCanBeConvertedToForeach
+            // ReSharper disable once LoopCanBeConvertedToQuery
             for (var i = 0; i < Diagnostics.Count; i++)
             {
                 if (Diagnostics[i].Descriptor.DefaultSeverity == DiagnosticSeverity.Error)
@@ -26,6 +28,7 @@ public sealed record Result<TValue>(TValue Value, EquatableArray<DiagnosticInfo>
     }
 
     [MemberNotNullWhen(true, nameof(Value))]
+    // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
     public bool HasValue { get; init; } = Value is not null;
 }
 
