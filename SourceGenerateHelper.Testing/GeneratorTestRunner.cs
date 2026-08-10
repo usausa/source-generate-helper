@@ -11,14 +11,8 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-// A thin, transparent wrapper over CSharpGeneratorDriver.
-// It assembles the standard Roslyn objects and hands them back — it does not hide them.
-// GeneratorTestResult exposes the raw GeneratorDriverRunResult and Compilation so anything
-// this class does not cover can still be done with the plain Roslyn API.
 public sealed class GeneratorTestRunner
 {
-    // Generators resolve SourceGenerateHelper at run time. It is copied next to the test binaries
-    // by the PackageReference, but nothing loads it eagerly, so the first use can fail to resolve.
     private static readonly Lazy<bool> DependenciesLoaded = new(static () =>
     {
         var directory = Path.GetDirectoryName(typeof(GeneratorTestRunner).Assembly.Location);
@@ -71,24 +65,18 @@ public sealed class GeneratorTestRunner
     // Configuration
     // ------------------------------------------------------------
 
-    // Adds a generator to run alongside the ones already registered.
     public GeneratorTestRunner Add(IIncrementalGenerator generator)
     {
         generators.Add(generator);
         return this;
     }
 
-    // References every assembly the test host trusts, which already covers the BCL and anything
-    // copied next to the test binaries. Use this to make the intent explicit for a specific
-    // runtime library (for example the assembly declaring the marker attributes).
     public GeneratorTestRunner WithReference(Assembly assembly)
     {
         referenceAssemblies.Add(assembly);
         return this;
     }
 
-    // Restricts GetDiagnostics to the given ID prefixes (for example "SMV").
-    // Without this, GetDiagnostics returns everything the generators reported.
     public GeneratorTestRunner WithDiagnosticPrefix(params string[] prefixes)
     {
         ArgumentNullException.ThrowIfNull(prefixes);
@@ -97,7 +85,6 @@ public sealed class GeneratorTestRunner
         return this;
     }
 
-    // Supplies a build_property.* style global option (AnalyzerConfigOptionsProvider.GlobalOptions).
     public GeneratorTestRunner WithGlobalOption(string key, string value)
     {
         globalOptions[key] = value;
@@ -128,26 +115,18 @@ public sealed class GeneratorTestRunner
         return this;
     }
 
-    // Defaults to DynamicallyLinkedLibrary. Use ConsoleApplication when the generator targets
-    // an entry-point-bearing program and the test source declares one.
     public GeneratorTestRunner WithOutputKind(OutputKind kind)
     {
         outputKind = kind;
         return this;
     }
 
-    // Fails the run when the generated code does not compile. Closes the gap where a generator
-    // aborts, emits nothing, and string assertions silently pass.
-    // Skipped automatically when a generator reported an Error, because generation is then
-    // intentionally incomplete.
     public GeneratorTestRunner VerifyCompiles(bool enabled = true)
     {
         verifyCompiles = enabled;
         return this;
     }
 
-    // Enables GeneratorDriverOptions.trackIncrementalGeneratorSteps so the result's
-    // TrackedSteps can be asserted in incremental-cache regression tests.
     public GeneratorTestRunner WithTracking(bool enabled = true)
     {
         trackSteps = enabled;
@@ -188,8 +167,6 @@ public sealed class GeneratorTestRunner
         return new GeneratorTestResult(runResult, updated, outputCompilation, generated, all.ToString(), compilationErrors);
     }
 
-    // Builds the driver and compilation without running them. For multi-pass incremental tests
-    // that need to drive the same driver twice over different compilations.
     public (GeneratorDriver Driver, Compilation Compilation) CreateDriver(string source)
     {
         _ = DependenciesLoaded.Value;
@@ -212,16 +189,13 @@ public sealed class GeneratorTestRunner
     }
 
     // ------------------------------------------------------------
-    // Convenience
+    // Results
     // ------------------------------------------------------------
 
-    // The first generated source, or an empty string when nothing was generated.
     public string GetGeneratedSource(string source) => Run(source).FirstGeneratedSource;
 
-    // Diagnostics reported by the generators, filtered by WithDiagnosticPrefix when set.
     public IReadOnlyList<Diagnostic> GetDiagnostics(string source) => Run(source).Diagnostics(diagnosticPrefixes);
 
-    // Everything, including diagnostics from compiling the generated code.
     public IReadOnlyList<Diagnostic> GetDiagnosticsAll(string source)
     {
         var result = Run(source);
@@ -239,6 +213,7 @@ public sealed class GeneratorTestRunner
 
         if (AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") is string trusted)
         {
+            // ReSharper disable once LoopCanBeConvertedToQuery
             foreach (var path in trusted.Split(Path.PathSeparator))
             {
                 if (!String.IsNullOrEmpty(path) &&
@@ -261,7 +236,7 @@ public sealed class GeneratorTestRunner
         return references;
     }
 
-    private static string BuildCompileFailureMessage(IReadOnlyList<Diagnostic> errors)
+    private static string BuildCompileFailureMessage(IEnumerable<Diagnostic> errors)
     {
         var message = new StringBuilder();
         message.AppendLine("Generated code does not compile:");

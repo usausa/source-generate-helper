@@ -3,16 +3,14 @@ namespace SourceGenerateHelper.Tests;
 using System.Text;
 
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 
 using SourceGenerateHelper.Testing;
 
-#pragma warning disable CA1812
 public sealed class GeneratorTestRunnerTest
 {
     // ------------------------------------------------------------
-    // Generated source
+    // Source
     // ------------------------------------------------------------
 
     [Fact]
@@ -87,7 +85,7 @@ public sealed class GeneratorTestRunnerTest
     }
 
     // ------------------------------------------------------------
-    // Compile verification
+    // Compile
     // ------------------------------------------------------------
 
     [Fact]
@@ -119,7 +117,7 @@ public sealed class GeneratorTestRunnerTest
     }
 
     // ------------------------------------------------------------
-    // Global options
+    // Options
     // ------------------------------------------------------------
 
     [Fact]
@@ -141,7 +139,7 @@ public sealed class GeneratorTestRunnerTest
     }
 
     // ------------------------------------------------------------
-    // Additional text
+    // Text
     // ------------------------------------------------------------
 
     [Fact]
@@ -155,7 +153,7 @@ public sealed class GeneratorTestRunnerTest
     }
 
     // ------------------------------------------------------------
-    // Multiple generators
+    // Multiple
     // ------------------------------------------------------------
 
     [Fact]
@@ -170,7 +168,7 @@ public sealed class GeneratorTestRunnerTest
     }
 
     // ------------------------------------------------------------
-    // Output kind
+    // Output
     // ------------------------------------------------------------
 
     [Fact]
@@ -194,7 +192,7 @@ public sealed class GeneratorTestRunnerTest
     }
 
     // ------------------------------------------------------------
-    // Hint name lookup
+    // Hint name
     // ------------------------------------------------------------
 
     [Fact]
@@ -244,7 +242,6 @@ public sealed class GeneratorTestRunnerTest
 
     private const string TargetSource = AttributeOnly + "[Marker] public class Target { }";
 
-    // Generates one file per [Marker] type, and reports TST0001 for a type named "Invalid".
     internal sealed class MarkerGenerator : IIncrementalGenerator
     {
         private static readonly DiagnosticDescriptor InvalidName = new(
@@ -277,7 +274,6 @@ public sealed class GeneratorTestRunnerTest
         }
     }
 
-    // Emits code that does not compile.
     internal sealed class BrokenGenerator : IIncrementalGenerator
     {
         public void Initialize(IncrementalGeneratorInitializationContext context)
@@ -293,7 +289,6 @@ public sealed class GeneratorTestRunnerTest
         }
     }
 
-    // Reads a build_property.* global option.
     internal sealed class OptionGenerator : IIncrementalGenerator
     {
         public void Initialize(IncrementalGeneratorInitializationContext context)
@@ -306,7 +301,6 @@ public sealed class GeneratorTestRunnerTest
         }
     }
 
-    // Reads AdditionalTexts.
     internal sealed class AdditionalTextGenerator : IIncrementalGenerator
     {
         public void Initialize(IncrementalGeneratorInitializationContext context)
@@ -319,4 +313,3 @@ public sealed class GeneratorTestRunnerTest
         }
     }
 }
-#pragma warning restore CA1812

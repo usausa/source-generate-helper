@@ -66,8 +66,6 @@ public static class SourceBuilderExtensions
         return builder;
     }
 
-    // Closes a scope that is part of an expression — an object or collection initializer,
-    // a lambda body assigned to a field — where the brace needs a trailing semicolon.
     public static SourceBuilder EndScope(this SourceBuilder builder, bool semicolon)
     {
         builder.IndentLevel--;
@@ -75,8 +73,6 @@ public static class SourceBuilderExtensions
         return builder;
     }
 
-    // Indent().Append(value).NewLine(), which is by far the most repeated chain in the ecosystem.
-    // Lambda and Functions had each defined a private wrapper for exactly this.
     public static SourceBuilder AppendLine(this SourceBuilder builder, string value) =>
         builder.Indent().Append(value).NewLine();
 

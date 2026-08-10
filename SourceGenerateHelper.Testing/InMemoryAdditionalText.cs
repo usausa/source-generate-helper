@@ -6,7 +6,6 @@ using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-// An AdditionalText backed by a string, for generators that read AdditionalTextsProvider.
 internal sealed class InMemoryAdditionalText : AdditionalText
 {
     private readonly SourceText text;
