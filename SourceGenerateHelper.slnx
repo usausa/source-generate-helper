@@ -13,6 +13,11 @@
     <File Path="README.md" />
     <File Path="SourceGenerateHelper.sln.DotSettings" />
   </Folder>
+  <Folder Name="/docs/">
+    <File Path="docs/generator-guide.ja.md" />
+    <File Path="docs/generator-guide.md" />
+  </Folder>
   <Project Path="SourceGenerateHelper/SourceGenerateHelper.csproj" />
+  <Project Path="SourceGenerateHelper.Testing/SourceGenerateHelper.Testing.csproj" />
   <Project Path="SourceGenerateHelper.Tests/SourceGenerateHelper.Tests.csproj" />
 </Solution>
