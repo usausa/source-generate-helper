@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IReadOnlyList<T>
 {
 #pragma warning disable IDE0051
-    public static readonly EquatableArray<T> Empty = new([]);
+    public static readonly EquatableArray<T> Empty = [with([])];
 #pragma warning restore IDE0051
 
     private readonly T[]? array;
@@ -32,7 +32,7 @@ public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IReadO
 #pragma warning disable CA2225
     public static implicit operator T[](EquatableArray<T> value) => value.Values;
 
-    public static implicit operator EquatableArray<T>(T[] value) => new(value);
+    public static implicit operator EquatableArray<T>(T[] value) => [with(value)];
 #pragma warning restore CA2225
 
     public bool Equals(EquatableArray<T> other) => Values.SequenceEqual(other.Values);
