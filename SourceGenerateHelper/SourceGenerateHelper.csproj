@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <DebugType>embedded</DebugType>
+    <IncludeSymbols>false</IncludeSymbols>
     <CodeAnalysisRuleSet>..\Analyzers.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
