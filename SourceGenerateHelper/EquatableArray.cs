@@ -15,6 +15,11 @@ public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IReadO
         this.array = array;
     }
 
+    public EquatableArray(IEnumerable<T> source)
+    {
+        array = source.ToArray();
+    }
+
     private T[] Values => array ?? [];
 
     public int Count => Values.Length;

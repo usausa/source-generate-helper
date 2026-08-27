@@ -9,6 +9,61 @@ public sealed class EquatableArrayTest
     private static readonly int[] Expected123 = [1, 2, 3];
 
     // ------------------------------------------------------------------
+    // Constructor
+    // ------------------------------------------------------------------
+
+    [Fact]
+    public void ConstructorFromEnumerable()
+    {
+        // Arrange
+        IEnumerable<int> source = new List<int> { 1, 2, 3 };
+
+        // Act
+        var array = new EquatableArray<int>(source);
+
+        // Assert
+        Assert.Equal(Expected123, (int[])array);
+    }
+
+    [Fact]
+    public void ConstructorFromEnumerableMaterializesSource()
+    {
+        // Arrange
+        var source = new List<int> { 1, 2, 3 };
+        var array = new EquatableArray<int>(source.Select(static x => x));
+
+        // Act
+        source.Add(4);
+
+        // Assert
+        Assert.Equal(3, array.Count);
+    }
+
+    [Fact]
+    public void ConstructorFromEnumerableEqualsArrayVersion()
+    {
+        // Arrange
+        var fromEnumerable = new EquatableArray<int>(Enumerable.Range(1, 3));
+        var fromArray = new EquatableArray<int>([1, 2, 3]);
+
+        // Act & Assert
+        Assert.True(fromEnumerable == fromArray);
+    }
+
+    [Fact]
+    public void ConstructorFromArrayKeepsReference()
+    {
+        // Arrange
+        var source = new[] { 1, 2, 3 };
+
+        // Act
+        var array = new EquatableArray<int>(source);
+
+        // Assert
+        Assert.Same(source, (int[])array);
+    }
+
+    // ------------------------------------------------------------------
     // Equality
     // ------------------------------------------------------------------
 
