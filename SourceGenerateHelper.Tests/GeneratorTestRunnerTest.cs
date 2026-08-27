@@ -235,12 +235,60 @@ public sealed class GeneratorTestRunnerTest
     }
 
     // ------------------------------------------------------------
+    // Incremental
+    // ------------------------------------------------------------
+
+    [Fact]
+    public void WhenAddedSourceIsUnrelatedThenOutputIsNotChanged()
+    {
+        var result = GeneratorTestRunner.For<MarkerGenerator>()
+            .WithTracking()
+            .RunIncremental(TargetSource, UnrelatedSource);
+
+        Assert.Equal(result.FirstGeneratedText, result.SecondGeneratedText);
+        Assert.NotEmpty(result.OutputReasons);
+        Assert.DoesNotContain(result.OutputReasons, static x => x.IsChanged());
+    }
+
+    [Fact]
+    public void WhenAddedSourceIsTargetThenOutputIsChanged()
+    {
+        var result = GeneratorTestRunner.For<MarkerGenerator>()
+            .WithTracking()
+            .RunIncremental(TargetSource, "[Marker] public class Added { }");
+
+        Assert.NotEqual(result.FirstGeneratedText, result.SecondGeneratedText);
+        Assert.Contains(result.OutputReasons, static x => x.IsChanged());
+    }
+
+    [Fact]
+    public void WhenTrackingIsDisabledThenRunIncrementalThrows()
+    {
+        var runner = GeneratorTestRunner.For<MarkerGenerator>();
+
+        Assert.Throws<InvalidOperationException>(() => runner.RunIncremental(TargetSource, UnrelatedSource));
+    }
+
+    [Theory]
+    [InlineData(IncrementalStepRunReason.New, true)]
+    [InlineData(IncrementalStepRunReason.Modified, true)]
+    [InlineData(IncrementalStepRunReason.Removed, true)]
+    [InlineData(IncrementalStepRunReason.Cached, false)]
+    [InlineData(IncrementalStepRunReason.Unchanged, false)]
+    public void WhenReasonIsGivenThenIsChangedReflectsIt(IncrementalStepRunReason reason, bool expected)
+    {
+        Assert.Equal(expected, reason.IsChanged());
+    }
+
+    // ------------------------------------------------------------
     // Fixtures
     // ------------------------------------------------------------
 
     private const string AttributeOnly = "public sealed class MarkerAttribute : System.Attribute { }\n";
 
     private const string TargetSource = AttributeOnly + "[Marker] public class Target { }";
+
+    private const string UnrelatedSource = "public class Unrelated { }";
 
     internal sealed class MarkerGenerator : IIncrementalGenerator
     {

@@ -167,6 +167,30 @@ public sealed class GeneratorTestRunner
         return new GeneratorTestResult(runResult, updated, outputCompilation, generated, all.ToString(), compilationErrors);
     }
 
+    public IncrementalRunResult RunIncremental(string source, string addedSource)
+    {
+        if (!trackSteps)
+        {
+            throw new InvalidOperationException($"{nameof(RunIncremental)} requires {nameof(WithTracking)}().");
+        }
+
+        var (driver, compilation) = CreateDriver(source);
+
+        driver = driver.RunGenerators(compilation);
+        var first = driver.GetRunResult();
+
+        var added = CSharpSyntaxTree.ParseText(addedSource, new CSharpParseOptions(languageVersion));
+        driver = driver.RunGenerators(compilation.AddSyntaxTrees(added));
+        var second = driver.GetRunResult();
+
+        return new IncrementalRunResult(
+            first,
+            second,
+            CollectGeneratedText(first),
+            CollectGeneratedText(second),
+            CollectOutputReasons(second));
+    }
+
     public (GeneratorDriver Driver, Compilation Compilation) CreateDriver(string source)
     {
         _ = DependenciesLoaded.Value;
@@ -205,6 +229,24 @@ public sealed class GeneratorTestRunner
     // ------------------------------------------------------------
     // Helper
     // ------------------------------------------------------------
+
+    private static string CollectGeneratedText(GeneratorDriverRunResult result)
+    {
+        var builder = new StringBuilder();
+        foreach (var generatedSource in result.Results.SelectMany(static x => x.GeneratedSources))
+        {
+            builder.Append(generatedSource.SourceText.ToString()).AppendLine();
+        }
+
+        return builder.ToString();
+    }
+
+    private static List<IncrementalStepRunReason> CollectOutputReasons(GeneratorDriverRunResult result) =>
+        [.. result.Results
+            .SelectMany(static x => x.TrackedOutputSteps)
+            .SelectMany(static x => x.Value)
+            .SelectMany(static x => x.Outputs)
+            .Select(static x => x.Reason)];
 
     private List<MetadataReference> BuildReferences()
     {
