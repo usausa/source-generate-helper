@@ -235,7 +235,7 @@ public sealed class GeneratorTestRunner
         var builder = new StringBuilder();
         foreach (var generatedSource in result.Results.SelectMany(static x => x.GeneratedSources))
         {
-            builder.Append(generatedSource.SourceText.ToString()).AppendLine();
+            builder.Append(generatedSource.SourceText).AppendLine();
         }
 
         return builder.ToString();
