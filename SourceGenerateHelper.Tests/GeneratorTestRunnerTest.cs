@@ -292,7 +292,7 @@ public sealed class GeneratorTestRunnerTest
 
     internal sealed class MarkerGenerator : IIncrementalGenerator
     {
-        private static readonly DiagnosticDescriptor InvalidName = new(
+        private static DiagnosticDescriptor InvalidName { get; } = new(
             id: "TST0001",
             title: "Invalid name",
             messageFormat: "Type must not be named Invalid: {0}",
