@@ -15,7 +15,7 @@ public sealed class HintNameBuilderTest
     [Fact]
     public void EmptyNamespaceIsOmitted()
     {
-        Assert.Equal("Data.g.cs", HintNameBuilder.Build(String.Empty, "Data"));
+        Assert.Equal("Data.g.cs", HintNameBuilder.Build(string.Empty, "Data"));
         Assert.Equal("Data.g.cs", HintNameBuilder.Build(null, "Data"));
     }
 
@@ -34,8 +34,8 @@ public sealed class HintNameBuilderTest
     [Fact]
     public void EmptyPartsAreSkipped()
     {
-        Assert.Equal("Test_Data.g.cs", HintNameBuilder.Build("Test", "Data", String.Empty));
-        Assert.Equal("Test_Data.g.cs", HintNameBuilder.Build("Test", String.Empty, "Data"));
+        Assert.Equal("Test_Data.g.cs", HintNameBuilder.Build("Test", "Data", string.Empty));
+        Assert.Equal("Test_Data.g.cs", HintNameBuilder.Build("Test", string.Empty, "Data"));
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public sealed class HintNameBuilderTest
     {
         Assert.Equal(
             "Test_Ns_SampleMappers.AspNetCore.g.cs",
-            HintNameBuilder.BuildWithExtension("Test.Ns", ".AspNetCore.g.cs", "SampleMappers", String.Empty));
+            HintNameBuilder.BuildWithExtension("Test.Ns", ".AspNetCore.g.cs", "SampleMappers", string.Empty));
 
         Assert.Equal(
             "Test_Ns_SampleMappers_EntityA_MyProfile.AspNetCore.g.cs",

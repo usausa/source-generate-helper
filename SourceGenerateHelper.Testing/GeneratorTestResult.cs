@@ -39,10 +39,10 @@ public sealed class GeneratorTestResult
     public IReadOnlyList<Diagnostic> GeneratorDiagnostics => DriverResult.Diagnostics;
 
     public string FirstGeneratedSource =>
-        GeneratedSources.Count > 0 ? GeneratedSources.Values.First() : String.Empty;
+        GeneratedSources.Count > 0 ? GeneratedSources.Values.First() : string.Empty;
 
     public string GeneratedSource(string hintName) =>
-        GeneratedSources.TryGetValue(hintName, out var text) ? text : String.Empty;
+        GeneratedSources.TryGetValue(hintName, out var text) ? text : string.Empty;
 
     public string? FindGeneratedSource(string hintName) =>
         GeneratedSources.GetValueOrDefault(hintName);

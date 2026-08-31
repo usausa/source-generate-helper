@@ -83,7 +83,7 @@ public sealed class AnalyzerConfigExtensionsTest
     [Fact]
     public void GetValueEmptyStringNonStringReturnsDefault()
     {
-        Assert.Equal(0, Options("Key", String.Empty).GetValue<int>("Key"));
+        Assert.Equal(0, Options("Key", string.Empty).GetValue<int>("Key"));
     }
 
     [Fact]

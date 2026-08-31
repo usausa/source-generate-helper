@@ -44,7 +44,7 @@ internal sealed class DictionaryAnalyzerConfigOptionsProvider : AnalyzerConfigOp
                 return true;
             }
 
-            value = String.Empty;
+            value = string.Empty;
             return false;
         }
     }

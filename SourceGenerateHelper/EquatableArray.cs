@@ -2,6 +2,7 @@ namespace SourceGenerateHelper;
 
 using System.Collections.Generic;
 
+#pragma warning disable CA1034
 public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IReadOnlyList<T>
 {
 #pragma warning disable IDE0051
@@ -42,7 +43,7 @@ public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IReadO
 
     public bool Equals(EquatableArray<T> other) => Values.SequenceEqual(other.Values);
 
-    public override bool Equals(object? obj) => obj is EquatableArray<T> other && Equals(other);
+    public override bool Equals(object? obj) => (obj is EquatableArray<T> other) && Equals(other);
 
     public override int GetHashCode()
     {
@@ -79,7 +80,7 @@ public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IReadO
         public readonly bool Equals(Enumerator other) =>
             ReferenceEquals(values, other.values) && (index == other.index);
 
-        public override readonly bool Equals(object? obj) => obj is Enumerator other && Equals(other);
+        public override readonly bool Equals(object? obj) => (obj is Enumerator other) && Equals(other);
 
         public override readonly int GetHashCode() =>
             (values.GetHashCode() * 31) + index;
@@ -89,3 +90,4 @@ public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IReadO
         public static bool operator !=(Enumerator left, Enumerator right) => !left.Equals(right);
     }
 }
+#pragma warning restore CA1034

@@ -2,6 +2,7 @@ namespace SourceGenerateHelper;
 
 using Microsoft.CodeAnalysis;
 
+#pragma warning disable CA1002
 public static class SymbolExtensions
 {
     // ------------------------------------------------------------
@@ -209,7 +210,7 @@ public static class SymbolExtensions
         {
             properties.AddRange(currentType.GetMembers()
                 .OfType<IPropertySymbol>()
-                .Where(static p => !p.IsStatic && p.DeclaredAccessibility == Accessibility.Public));
+                .Where(static p => !p.IsStatic && (p.DeclaredAccessibility == Accessibility.Public)));
 
             currentType = currentType.BaseType;
         }
@@ -253,3 +254,4 @@ public static class SymbolExtensions
         return null;
     }
 }
+#pragma warning restore CA1002

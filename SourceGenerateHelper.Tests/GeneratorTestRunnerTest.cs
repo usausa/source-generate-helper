@@ -26,7 +26,7 @@ public sealed class GeneratorTestRunnerTest
     {
         var generated = GeneratorTestRunner.For<MarkerGenerator>().GetGeneratedSource(AttributeOnly);
 
-        Assert.Equal(String.Empty, generated);
+        Assert.Equal(string.Empty, generated);
     }
 
     [Fact]
@@ -201,7 +201,7 @@ public sealed class GeneratorTestRunnerTest
         var result = GeneratorTestRunner.For<MarkerGenerator>().Run(TargetSource);
 
         Assert.Null(result.FindGeneratedSource("Missing.g.cs"));
-        Assert.Equal(String.Empty, result.GeneratedSource("Missing.g.cs"));
+        Assert.Equal(string.Empty, result.GeneratedSource("Missing.g.cs"));
     }
 
     [Fact]
@@ -209,7 +209,7 @@ public sealed class GeneratorTestRunnerTest
     {
         var result = GeneratorTestRunner.For<MarkerGenerator>().Run(TargetSource);
 
-        Assert.Contains("// generated for Target", result.FindGeneratedSource("Target.g.cs")!, StringComparison.Ordinal);
+        Assert.Contains("// generated for Target", result.FindGeneratedSource("Target.g.cs"), StringComparison.Ordinal);
     }
 
     // ------------------------------------------------------------
@@ -354,7 +354,7 @@ public sealed class GeneratorTestRunnerTest
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
             var provider = context.AdditionalTextsProvider.Select(static (text, token) =>
-                (Name: Path.GetFileName(text.Path), Content: text.GetText(token)?.ToString() ?? String.Empty));
+                (Name: Path.GetFileName(text.Path), Content: text.GetText(token)?.ToString() ?? string.Empty));
 
             context.RegisterSourceOutput(provider, static (production, item) =>
                 production.AddSource($"{item.Name}.g.cs", SourceText.From($"// {item.Name}={item.Content}", Encoding.UTF8)));
