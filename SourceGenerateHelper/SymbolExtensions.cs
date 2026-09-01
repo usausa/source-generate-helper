@@ -200,7 +200,7 @@ public static class SymbolExtensions
     // Property
     // -------------------------------------------------------
 
-    public static List<IPropertySymbol> GetAllPublicProperties(this ITypeSymbol type)
+    public static IReadOnlyList<IPropertySymbol> GetAllPublicProperties(this ITypeSymbol type)
     {
         var properties = new List<IPropertySymbol>();
         var currentType = type;
