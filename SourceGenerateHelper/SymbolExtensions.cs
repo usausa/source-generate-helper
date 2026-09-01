@@ -2,7 +2,6 @@ namespace SourceGenerateHelper;
 
 using Microsoft.CodeAnalysis;
 
-#pragma warning disable CA1002
 public static class SymbolExtensions
 {
     // ------------------------------------------------------------
@@ -254,4 +253,3 @@ public static class SymbolExtensions
         return null;
     }
 }
-#pragma warning restore CA1002
