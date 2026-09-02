@@ -53,9 +53,9 @@ public sealed class GeneratorTestResult
 
         if (prefixes.Count == 0)
         {
-            return [.. GeneratorDiagnostics];
+            return GeneratorDiagnostics.ToArray();
         }
 
-        return [.. GeneratorDiagnostics.Where(x => prefixes.Any(prefix => x.Id.StartsWith(prefix, StringComparison.Ordinal)))];
+        return GeneratorDiagnostics.Where(x => prefixes.Any(prefix => x.Id.StartsWith(prefix, StringComparison.Ordinal))).ToArray();
     }
 }

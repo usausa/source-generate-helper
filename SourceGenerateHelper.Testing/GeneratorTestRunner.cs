@@ -242,11 +242,11 @@ public sealed class GeneratorTestRunner
     }
 
     private static List<IncrementalStepRunReason> CollectOutputReasons(GeneratorDriverRunResult result) =>
-        [.. result.Results
+        result.Results
             .SelectMany(static x => x.TrackedOutputSteps)
             .SelectMany(static x => x.Value)
             .SelectMany(static x => x.Outputs)
-            .Select(static x => x.Reason)];
+            .Select(static x => x.Reason).ToList();
 
     private List<MetadataReference> BuildReferences()
     {
