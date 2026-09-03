@@ -18,7 +18,7 @@ public readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>, IReadO
 
     public EquatableArray(IEnumerable<T> source)
     {
-        array = source.ToArray();
+        array = [.. source];
     }
 
     private T[] Values => array ?? [];

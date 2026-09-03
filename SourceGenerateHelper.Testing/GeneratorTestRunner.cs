@@ -241,12 +241,14 @@ public sealed class GeneratorTestRunner
         return builder.ToString();
     }
 
+#pragma warning disable IDE0028
     private static List<IncrementalStepRunReason> CollectOutputReasons(GeneratorDriverRunResult result) =>
         result.Results
             .SelectMany(static x => x.TrackedOutputSteps)
             .SelectMany(static x => x.Value)
             .SelectMany(static x => x.Outputs)
             .Select(static x => x.Reason).ToList();
+#pragma warning restore IDE0028
 
     private List<MetadataReference> BuildReferences()
     {
