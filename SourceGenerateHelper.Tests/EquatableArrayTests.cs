@@ -1,6 +1,6 @@
 namespace SourceGenerateHelper.Tests;
 
-public sealed class EquatableArrayTest
+public sealed class EquatableArrayTests
 {
     private static readonly int[] Expected102030 = [10, 20, 30];
 

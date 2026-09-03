@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-public sealed class DiagnosticInfoTest
+public sealed class DiagnosticInfoTests
 {
     private static DiagnosticDescriptor CreateDescriptor() =>
         new("TST0001", "Title", "Message {0}", "Test", DiagnosticSeverity.Warning, isEnabledByDefault: true);

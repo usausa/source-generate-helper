@@ -3,7 +3,7 @@ namespace SourceGenerateHelper.Tests;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-public sealed class SourceBuilderTest
+public sealed class SourceBuilderTests
 {
     [Fact]
     public void TestCondition()

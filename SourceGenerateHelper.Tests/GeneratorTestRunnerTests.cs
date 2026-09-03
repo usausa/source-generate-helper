@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.Text;
 
 using SourceGenerateHelper.Testing;
 
-public sealed class GeneratorTestRunnerTest
+public sealed class GeneratorTestRunnerTests
 {
     // ------------------------------------------------------------
     // Source

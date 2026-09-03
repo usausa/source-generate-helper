@@ -6,7 +6,7 @@ using SourceGenerateHelper.Testing;
 
 // Covers the additions that let a generator go from model to AddSource without hand-rolling
 // the indent/newline chain, the closing-brace-with-semicolon case, or the hint name.
-public sealed class SourceOutputExtensionsTest
+public sealed class SourceOutputExtensionsTests
 {
     //-----------------------------------------------------------------------
     // AppendLine

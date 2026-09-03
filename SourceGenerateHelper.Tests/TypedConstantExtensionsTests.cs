@@ -3,7 +3,7 @@ namespace SourceGenerateHelper.Tests;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-public sealed class TypedConstantExtensionsTest
+public sealed class TypedConstantExtensionsTests
 {
     private const string Source =
         """

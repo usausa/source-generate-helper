@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.CodeAnalysis.Diagnostics;
 
-public sealed class AnalyzerConfigExtensionsTest
+public sealed class AnalyzerConfigExtensionsTests
 {
     private enum Color
     {

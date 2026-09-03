@@ -2,7 +2,7 @@ namespace SourceGenerateHelper.Tests;
 
 using Microsoft.CodeAnalysis;
 
-public sealed class ResultTest
+public sealed class ResultTests
 {
     private static DiagnosticInfo CreateDiagnostic(string id, DiagnosticSeverity severity = DiagnosticSeverity.Warning)
     {

@@ -3,7 +3,7 @@ namespace SourceGenerateHelper.Tests;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-public sealed class SymbolExtensionsTest
+public sealed class SymbolExtensionsTests
 {
     // ------------------------------------------------------------------
     // Helper

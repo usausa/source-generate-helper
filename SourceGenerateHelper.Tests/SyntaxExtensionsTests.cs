@@ -3,7 +3,7 @@ namespace SourceGenerateHelper.Tests;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-public sealed class SyntaxExtensionsTest
+public sealed class SyntaxExtensionsTests
 {
     private static BaseTypeDeclarationSyntax GetFirstType(string source)
     {

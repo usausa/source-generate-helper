@@ -1,6 +1,6 @@
 namespace SourceGenerateHelper.Tests;
 
-public sealed class ValueStringBuilderTest
+public sealed class ValueStringBuilderTests
 {
     [Fact]
     public void AppendWithinInitialBuffer()

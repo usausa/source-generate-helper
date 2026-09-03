@@ -1,6 +1,6 @@
 namespace SourceGenerateHelper.Tests;
 
-public sealed class HintNameBuilderTest
+public sealed class HintNameBuilderTests
 {
     //-----------------------------------------------------------------------
     // Shape
