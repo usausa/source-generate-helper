@@ -45,4 +45,8 @@ public static class Results
     public static Result<TValue> Errors<TValue>(params DiagnosticInfo[] diagnostics)
         where TValue : IEquatable<TValue>
         => new(default!, diagnostics) { HasValue = false };
+
+    public static Result<TValue> Errors<TValue>(IEnumerable<DiagnosticInfo> diagnostics)
+        where TValue : IEquatable<TValue>
+        => new(default!, diagnostics.ToArray()) { HasValue = false };
 }
