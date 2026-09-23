@@ -55,6 +55,27 @@ public static class SymbolExtensions
     public static bool IsGenericType(this ITypeSymbol symbol) =>
         symbol is INamedTypeSymbol { IsGenericType: true } or ITypeParameterSymbol;
 
+    public static string GetDeclarationKeyword(this INamedTypeSymbol symbol) =>
+        symbol switch
+        {
+            { TypeKind: TypeKind.Interface } => "interface",
+            { IsRecord: true, IsValueType: true } => "record struct",
+            { IsRecord: true } => "record",
+            { IsValueType: true } => "struct",
+            _ => "class"
+        };
+
+    public static IReadOnlyList<INamedTypeSymbol> GetContainingTypes(this INamedTypeSymbol symbol)
+    {
+        var types = new List<INamedTypeSymbol>();
+        for (var type = symbol.ContainingType; type is not null; type = type.ContainingType)
+        {
+            types.Insert(0, type);
+        }
+
+        return types;
+    }
+
     // ------------------------------------------------------------
     // Nullable
     // ------------------------------------------------------------

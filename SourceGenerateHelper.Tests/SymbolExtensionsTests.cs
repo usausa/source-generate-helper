@@ -62,6 +62,27 @@ public sealed class SymbolExtensionsTests
         }
         """;
 
+    private const string DeclarationSource =
+        """
+        namespace MyNs
+        {
+            public class ClassType { }
+            public struct StructType { }
+            public record RecordType;
+            public record class RecordClassType;
+            public record struct RecordStructType;
+            public interface IInterfaceType { }
+
+            public class Outer
+            {
+                public struct Middle
+                {
+                    public class Inner { }
+                }
+            }
+        }
+        """;
+
     private static CSharpCompilation CreateCompilation(params string[] sources)
     {
         var coreLib = MetadataReference.CreateFromFile(typeof(object).Assembly.Location);
@@ -175,6 +196,58 @@ public sealed class SymbolExtensionsTests
 
         // Act & Assert
         Assert.False(type.IsGenericType());
+    }
+
+    // ------------------------------------------------------------------
+    // GetDeclarationKeyword
+    // ------------------------------------------------------------------
+
+    [Theory]
+    [InlineData("MyNs.ClassType", "class")]
+    [InlineData("MyNs.StructType", "struct")]
+    [InlineData("MyNs.RecordType", "record")]
+    [InlineData("MyNs.RecordClassType", "record")]
+    [InlineData("MyNs.RecordStructType", "record struct")]
+    [InlineData("MyNs.IInterfaceType", "interface")]
+    public void GetDeclarationKeywordMatchesDeclaration(string metadataName, string keyword)
+    {
+        // Arrange
+        var compilation = CreateCompilation(DeclarationSource);
+        var type = compilation.GetTypeByMetadataName(metadataName)!;
+
+        // Act & Assert
+        Assert.Equal(keyword, type.GetDeclarationKeyword());
+    }
+
+    // ------------------------------------------------------------------
+    // GetContainingTypes
+    // ------------------------------------------------------------------
+
+    [Fact]
+    public void GetContainingTypesOrdersFromOutermost()
+    {
+        // Arrange
+        var compilation = CreateCompilation(DeclarationSource);
+        var type = compilation.GetTypeByMetadataName("MyNs.Outer+Middle+Inner")!;
+
+        // Act
+        var types = type.GetContainingTypes();
+
+        // Assert
+        Assert.Equal(2, types.Count);
+        Assert.Equal("Outer", types[0].Name);
+        Assert.Equal("Middle", types[1].Name);
+    }
+
+    [Fact]
+    public void GetContainingTypesEmptyForTopLevelType()
+    {
+        // Arrange
+        var compilation = CreateCompilation(DeclarationSource);
+        var type = compilation.GetTypeByMetadataName("MyNs.ClassType")!;
+
+        // Act & Assert
+        Assert.Empty(type.GetContainingTypes());
     }
 
     // ------------------------------------------------------------------
