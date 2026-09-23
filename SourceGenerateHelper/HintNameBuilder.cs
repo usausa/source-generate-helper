@@ -48,6 +48,7 @@ public static class HintNameBuilder
             buffer.Append(c switch
             {
                 '.' => '_',
+                '_' => '-',
                 '<' => '[',
                 '>' => ']',
                 _ => c

@@ -26,6 +26,13 @@ public sealed class HintNameBuilderTests
     }
 
     [Fact]
+    public void UnderscoresInNamesBecomeHyphens()
+    {
+        Assert.Equal("Test_Outer-Inner.g.cs", HintNameBuilder.Build("Test", "Outer_Inner"));
+        Assert.Equal("Test-Ns_Data.g.cs", HintNameBuilder.Build("Test_Ns", "Data"));
+    }
+
+    [Fact]
     public void PartsAreJoinedWithUnderscore()
     {
         Assert.Equal("Test_Outer_Inner_Data_Suffix.g.cs", HintNameBuilder.Build("Test", "Outer", "Inner", "Data", "Suffix"));
@@ -53,6 +60,28 @@ public sealed class HintNameBuilderTests
     }
 
     //-----------------------------------------------------------------------
+    // Collision
+    //-----------------------------------------------------------------------
+
+    [Fact]
+    public void NestedTypeAndUnderscoreNameDoNotCollide()
+    {
+        Assert.NotEqual(HintNameBuilder.Build("Test", "Outer", "Inner"), HintNameBuilder.Build("Test", "Outer_Inner"));
+    }
+
+    [Fact]
+    public void NamespaceDotAndUnderscoreDoNotCollide()
+    {
+        Assert.NotEqual(HintNameBuilder.Build("Test.Ns", "Data"), HintNameBuilder.Build("Test_Ns", "Data"));
+    }
+
+    [Fact]
+    public void PartBoundaryAndUnderscoreDoNotCollide()
+    {
+        Assert.NotEqual(HintNameBuilder.Build("Test", "Handlers_Run", "Async"), HintNameBuilder.Build("Test", "Handlers", "Run_Async"));
+    }
+
+    //-----------------------------------------------------------------------
     // Implementations
     //-----------------------------------------------------------------------
 
@@ -66,6 +95,12 @@ public sealed class HintNameBuilderTests
     public void MatchesNamespaceClassAndMethod()
     {
         Assert.Equal("Test_Ns_Handlers_Run.g.cs", HintNameBuilder.Build("Test.Ns", "Handlers", "Run"));
+    }
+
+    [Fact]
+    public void MatchesNamespaceClassAndSharedSuffix()
+    {
+        Assert.Equal("Test_Ns_Handlers_--shared--.g.cs", HintNameBuilder.Build("Test.Ns", "Handlers", "__shared__"));
     }
 
     [Fact]
