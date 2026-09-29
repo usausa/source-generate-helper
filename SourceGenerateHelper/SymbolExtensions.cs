@@ -47,10 +47,11 @@ public static class SymbolExtensions
     // Type
     // ------------------------------------------------------------
 
+    // Arity, as IsGenericType is also true for a type nested in a generic one
     public static string GetClassName(this INamedTypeSymbol symbol) =>
-        symbol.IsGenericType
-            ? $"{symbol.Name}<{String.Join(", ", symbol.TypeArguments.Select(static x => x.Name))}>"
-            : symbol.Name;
+        symbol.Arity > 0
+            ? $"{CSharpIdentifier.EscapeTypeName(symbol.Name)}<{String.Join(", ", symbol.TypeArguments.Select(static x => CSharpIdentifier.EscapeTypeName(x.Name)))}>"
+            : CSharpIdentifier.EscapeTypeName(symbol.Name);
 
     public static bool IsGenericType(this ITypeSymbol symbol) =>
         symbol is INamedTypeSymbol { IsGenericType: true } or ITypeParameterSymbol;
@@ -65,6 +66,9 @@ public static class SymbolExtensions
             _ => "class"
         };
 
+    public static string GetPartialDeclaration(this INamedTypeSymbol symbol) =>
+        "partial " + symbol.GetDeclarationKeyword() + " " + symbol.GetClassName();
+
     public static IReadOnlyList<INamedTypeSymbol> GetContainingTypes(this INamedTypeSymbol symbol)
     {
         var types = new List<INamedTypeSymbol>();
@@ -75,6 +79,76 @@ public static class SymbolExtensions
 
         return types;
     }
+
+    public static bool HasFullyQualifiedMetadataName(this ITypeSymbol? type, string fullyQualifiedMetadataName)
+    {
+        if ((type is not INamedTypeSymbol named) || (named.TypeKind == TypeKind.Error))
+        {
+            return false;
+        }
+
+        var end = fullyQualifiedMetadataName.Length;
+        var current = named;
+        while (true)
+        {
+            if (!EndsWith(fullyQualifiedMetadataName, end, current.MetadataName))
+            {
+                return false;
+            }
+
+            end -= current.MetadataName.Length;
+            if (current.ContainingType is null)
+            {
+                break;
+            }
+
+            if ((end == 0) || (fullyQualifiedMetadataName[end - 1] != '+'))
+            {
+                return false;
+            }
+
+            end--;
+            current = current.ContainingType;
+        }
+
+        return EndsWithNamespace(fullyQualifiedMetadataName, end, current.ContainingNamespace);
+    }
+
+    public static bool CanBeNamedInOtherFile(this ITypeSymbol type)
+    {
+        switch (type)
+        {
+            case IArrayTypeSymbol array:
+                return array.ElementType.CanBeNamedInOtherFile();
+            case INamedTypeSymbol named:
+                for (var current = named; current is not null; current = current.ContainingType)
+                {
+                    if ((current.TypeKind == TypeKind.Error) || current.IsFileLocal)
+                    {
+                        return false;
+                    }
+
+                    if (!current.IsUnboundGenericType)
+                    {
+                        foreach (var argument in current.TypeArguments)
+                        {
+                            if (!argument.CanBeNamedInOtherFile())
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                }
+
+                return true;
+            default:
+                return type.TypeKind is not (TypeKind.Error or TypeKind.Pointer or TypeKind.FunctionPointer);
+        }
+    }
+
+    // typeof refuses dynamic and a nullable reference type at its top level
+    public static string ToTypeOfName(this ITypeSymbol type) =>
+        type.TypeKind == TypeKind.Dynamic ? "object" : type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
     // ------------------------------------------------------------
     // Nullable
@@ -113,16 +187,28 @@ public static class SymbolExtensions
         return type;
     }
 
+    public static bool CanBeNull(this ITypeSymbol type) =>
+        type switch
+        {
+            ITypeParameterSymbol parameter => !parameter.HasValueTypeConstraint && !parameter.HasUnmanagedTypeConstraint,
+            { TypeKind: TypeKind.Pointer or TypeKind.FunctionPointer } => false,
+            _ => !type.IsValueType || (type.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
+        };
+
     // ------------------------------------------------------------
     // Base
     // ------------------------------------------------------------
 
     public static bool InheritsFrom(this ITypeSymbol typeSymbol, string baseTypeFullName)
     {
+        var byName = (baseTypeFullName.IndexOf('.') >= 0) && (baseTypeFullName.IndexOf('<') < 0) &&
+                     !baseTypeFullName.StartsWith("global::", StringComparison.Ordinal);
         for (var current = typeSymbol; current is not null; current = current.BaseType)
         {
-            if ((current.ToDisplayString() == baseTypeFullName) ||
-                (current.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == $"global::{baseTypeFullName}"))
+            if (byName
+                ? HasFullName(current, baseTypeFullName)
+                : (current.ToDisplayString() == baseTypeFullName) ||
+                  (current.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == $"global::{baseTypeFullName}"))
             {
                 return true;
             }
@@ -180,11 +266,26 @@ public static class SymbolExtensions
         typeSymbol.AllInterfaces.Any(i =>
             SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, genericInterfaceDefinition));
 
-    public static bool IsImplementsInterfaceByName(this ITypeSymbol typeSymbol, string metadataName) =>
-        typeSymbol.AllInterfaces.Any(i =>
-            (i.OriginalDefinition.ToDisplayString() == metadataName) ||
-            (i.OriginalDefinition.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == $"global::{metadataName}") ||
-            (i.OriginalDefinition.MetadataName == metadataName.Split('.').Last()));
+    public static bool IsImplementsInterfaceByName(this ITypeSymbol typeSymbol, string metadataName)
+    {
+        var qualified = metadataName.IndexOf('.') >= 0;
+        var display = metadataName.IndexOf('<') >= 0;
+        foreach (var iface in typeSymbol.AllInterfaces)
+        {
+            var definition = iface.OriginalDefinition;
+            if (qualified
+                ? definition.HasFullyQualifiedMetadataName(metadataName) ||
+                  HasFullName(definition, metadataName) ||
+                  (display && ((definition.ToDisplayString() == metadataName) ||
+                               (definition.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == $"global::{metadataName}")))
+                : definition.MetadataName == metadataName)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     // -------------------------------------------------------
     // Collection
@@ -199,15 +300,14 @@ public static class SymbolExtensions
 
         if (collectionType is INamedTypeSymbol { IsGenericType: true } namedType)
         {
-            if (namedType.ConstructedFrom.ToDisplayString() == "System.Collections.Generic.IEnumerable<T>")
+            if (namedType.ConstructedFrom.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T)
             {
                 return namedType.TypeArguments[0];
             }
 
             foreach (var iface in namedType.AllInterfaces)
             {
-                if (iface.IsGenericType &&
-                    (iface.ConstructedFrom.ToDisplayString() == "System.Collections.Generic.IEnumerable<T>"))
+                if (iface.ConstructedFrom.SpecialType == SpecialType.System_Collections_Generic_IEnumerable_T)
                 {
                     return iface.TypeArguments[0];
                 }
@@ -236,6 +336,60 @@ public static class SymbolExtensions
         }
 
         return properties;
+    }
+
+    // ------------------------------------------------------------
+    // Attribute
+    // ------------------------------------------------------------
+
+    public static AttributeData? FindAttribute(this ISymbol symbol, string fullyQualifiedMetadataName)
+    {
+        foreach (var attribute in symbol.GetAttributes())
+        {
+            if (attribute.AttributeClass.HasFullyQualifiedMetadataName(fullyQualifiedMetadataName))
+            {
+                return attribute;
+            }
+        }
+
+        return null;
+    }
+
+    public static bool HasAttribute(this ISymbol symbol, string fullyQualifiedMetadataName) =>
+        symbol.FindAttribute(fullyQualifiedMetadataName) is not null;
+
+    public static bool IsObsolete(this ISymbol symbol) =>
+        symbol.IsObsolete(out _);
+
+    public static bool IsObsolete(this ISymbol symbol, out bool isError)
+    {
+        var attribute = symbol.FindAttribute("System.ObsoleteAttribute");
+        isError = (attribute is not null) && attribute.TryGetConstructorArgument<bool>(1, out var error) && error;
+        return attribute is not null;
+    }
+
+    // ------------------------------------------------------------
+    // Parameter
+    // ------------------------------------------------------------
+
+    public static string? GetDefaultValueExpression(this IParameterSymbol parameter)
+    {
+        if (!parameter.HasExplicitDefaultValue)
+        {
+            return null;
+        }
+
+        var type = parameter.Type;
+        var value = parameter.ExplicitDefaultValue;
+        if (value is null)
+        {
+            return type.CanBeNull() && (type is not ITypeParameterSymbol { IsReferenceType: false })
+                ? "null"
+                : "default(" + type.ToDisplayString(SymbolDisplayFormats.FullyQualifiedNullable) + ")";
+        }
+
+        var valueType = type.GetUnderlyingType();
+        return valueType.TypeKind == TypeKind.Enum ? CSharpLiteral.FormatEnum(valueType, value) : CSharpLiteral.Format(value);
     }
 
     // ------------------------------------------------------------
@@ -272,5 +426,61 @@ public static class SymbolExtensions
         }
 
         return null;
+    }
+
+    // ------------------------------------------------------------
+    // Helper
+    // ------------------------------------------------------------
+
+    private static bool EndsWith(string text, int end, string value) =>
+        (end >= value.Length) && (String.CompareOrdinal(text, end - value.Length, value, 0, value.Length) == 0);
+
+    private static bool EndsWithNamespace(string text, int end, INamespaceSymbol? ns)
+    {
+        for (var current = ns; (current is not null) && !current.IsGlobalNamespace; current = current.ContainingNamespace)
+        {
+            if ((end == 0) || (text[end - 1] != '.') || !EndsWith(text, end - 1, current.Name))
+            {
+                return false;
+            }
+
+            end -= current.Name.Length + 1;
+        }
+
+        return end == 0;
+    }
+
+    private static bool HasFullName(ITypeSymbol type, string name)
+    {
+        if ((type is not INamedTypeSymbol named) || (named.TypeKind == TypeKind.Error))
+        {
+            return false;
+        }
+
+        var end = name.Length;
+        var current = named;
+        while (true)
+        {
+            if ((current.Arity > 0) || !EndsWith(name, end, current.Name))
+            {
+                return false;
+            }
+
+            end -= current.Name.Length;
+            if (current.ContainingType is null)
+            {
+                break;
+            }
+
+            if ((end == 0) || (name[end - 1] != '.'))
+            {
+                return false;
+            }
+
+            end--;
+            current = current.ContainingType;
+        }
+
+        return EndsWithNamespace(name, end, current.ContainingNamespace);
     }
 }

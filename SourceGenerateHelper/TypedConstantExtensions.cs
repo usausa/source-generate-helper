@@ -1,13 +1,78 @@
 namespace SourceGenerateHelper;
 
 using System;
-using System.Globalization;
+using System.Diagnostics.CodeAnalysis;
+using System.Text;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 public static class TypedConstantExtensions
 {
+    // ------------------------------------------------------------
+    // Value
+    // ------------------------------------------------------------
+
+    public static bool TryGetValue<T>(this TypedConstant constant, [MaybeNullWhen(false)] out T value)
+    {
+        if ((constant.Kind is not (TypedConstantKind.Error or TypedConstantKind.Array)) && !constant.IsNull &&
+            (constant.Value is not ITypeSymbol { TypeKind: TypeKind.Error }))
+        {
+            if (constant.Value is T typed)
+            {
+                value = typed;
+                return true;
+            }
+
+            if (typeof(T).IsEnum && (constant.Value is { } number) && IsInteger(number))
+            {
+                value = (T)Enum.ToObject(typeof(T), number);
+                return true;
+            }
+        }
+
+        value = default;
+        return false;
+    }
+
+    public static bool TryGetValues<T>(this TypedConstant constant, [NotNullWhen(true)] out T[]? values)
+    {
+        if ((constant.Kind != TypedConstantKind.Array) || constant.IsNull)
+        {
+            values = null;
+            return false;
+        }
+
+        var elements = constant.Values;
+        var result = new T[elements.Length];
+        for (var i = 0; i < elements.Length; i++)
+        {
+            var element = elements[i];
+            if (element.Kind == TypedConstantKind.Error)
+            {
+                values = null;
+                return false;
+            }
+
+            if (element.IsNull)
+            {
+                result[i] = default!;
+            }
+            else if (element.TryGetValue<T>(out var value))
+            {
+                result[i] = value;
+            }
+            else
+            {
+                values = null;
+                return false;
+            }
+        }
+
+        values = result;
+        return true;
+    }
+
     // ------------------------------------------------------------
     // Convert
     // ------------------------------------------------------------
@@ -20,9 +85,9 @@ public static class TypedConstantExtensions
             switch (constant.Value)
             {
                 case float f:
-                    return FormatSingle(f);
+                    return CSharpLiteral.FormatSingle(f);
                 case double d:
-                    return FormatDouble(d);
+                    return CSharpLiteral.FormatDouble(d);
             }
         }
 
@@ -41,12 +106,7 @@ public static class TypedConstantExtensions
 
     public static string? ToCSharpExpression(this TypedConstant constant, ITypeSymbol? targetType = null)
     {
-        if (constant.IsNull)
-        {
-            return "null";
-        }
-
-        var expression = MakeExpression(constant);
+        var expression = constant.Kind == TypedConstantKind.Array ? null : MakeExpression(constant, typed: true);
         if (expression is null)
         {
             return null;
@@ -54,6 +114,7 @@ public static class TypedConstantExtensions
 
         if ((targetType is null) ||
             (constant.Kind != TypedConstantKind.Primitive) ||
+            constant.IsNull ||
             (constant.Type is null) ||
             SymbolEqualityComparer.Default.Equals(constant.Type, targetType))
         {
@@ -66,89 +127,82 @@ public static class TypedConstantExtensions
             : $"({targetTypeName}){expression}";
     }
 
+    public static bool TryToCSharpExpression(
+        this TypedConstant constant,
+        ITypeSymbol targetType,
+        SemanticModel semanticModel,
+        int position,
+        [NotNullWhen(true)] out string? expression)
+    {
+        var text = MakeExpression(constant, typed: true);
+        if ((text is not null) && semanticModel.IsImplicitlyConvertible(position, text, targetType))
+        {
+            expression = text;
+            return true;
+        }
+
+        expression = null;
+        return false;
+    }
+
     // ------------------------------------------------------------
     // Helper
     // ------------------------------------------------------------
 
-    private static string? MakeExpression(TypedConstant constant) =>
-        constant.Kind switch
-        {
-            TypedConstantKind.Primitive => MakePrimitiveExpression(constant.Value),
-            TypedConstantKind.Enum => MakeEnumExpression(constant),
-            TypedConstantKind.Type => $"typeof({((ITypeSymbol)constant.Value!).ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)})",
-            _ => null
-        };
+    private static bool IsInteger(object? value) =>
+        value is sbyte or byte or short or ushort or int or uint or long or ulong;
 
-    private static string? MakePrimitiveExpression(object? value) =>
-        value switch
-        {
-            string s => SymbolDisplay.FormatLiteral(s, true),
-            char c => SymbolDisplay.FormatLiteral(c, true),
-            bool b => b ? "true" : "false",
-            float f => FormatSingle(f),
-            double d => FormatDouble(d),
-            decimal m => m.ToString(CultureInfo.InvariantCulture) + "m",
-            long l => l.ToString(CultureInfo.InvariantCulture) + "L",
-            ulong ul => ul.ToString(CultureInfo.InvariantCulture) + "uL",
-            uint ui => ui.ToString(CultureInfo.InvariantCulture) + "u",
-            IFormattable formattable => formattable.ToString(null, CultureInfo.InvariantCulture),
-            _ => null
-        };
-
-    private static string MakeEnumExpression(TypedConstant constant)
+    private static string? MakeExpression(TypedConstant constant, bool typed)
     {
-        var typeName = constant.Type!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
-        // A combined flags value has no single member name, so a cast is used instead
-        foreach (var member in constant.Type.GetMembers())
+        if (constant.Kind == TypedConstantKind.Error)
         {
-            if ((member is IFieldSymbol { IsConst: true, HasConstantValue: true } field) &&
-                Equals(field.ConstantValue, constant.Value))
+            return null;
+        }
+
+        if (constant.IsNull)
+        {
+            return "null";
+        }
+
+        return constant.Kind switch
+        {
+            TypedConstantKind.Primitive => typed ? CSharpLiteral.Format(constant.Value) : CSharpLiteral.FormatUntyped(constant.Value),
+            TypedConstantKind.Enum => constant.Type is null ? null : CSharpLiteral.FormatEnum(constant.Type, constant.Value),
+            TypedConstantKind.Type => (constant.Value is ITypeSymbol type) && type.CanBeNamedInOtherFile() ? "typeof(" + type.ToTypeOfName() + ")" : null,
+            TypedConstantKind.Array => MakeArrayExpression(constant),
+            _ => null
+        };
+    }
+
+    private static string? MakeArrayExpression(TypedConstant constant)
+    {
+        if ((constant.Type is not IArrayTypeSymbol arrayType) || !arrayType.ElementType.CanBeNamedInOtherFile())
+        {
+            return null;
+        }
+
+        var elements = new StringBuilder();
+        var hasNull = false;
+        foreach (var element in constant.Values)
+        {
+            var text = MakeExpression(element, typed: !SymbolEqualityComparer.Default.Equals(element.Type, arrayType.ElementType));
+            if (text is null)
             {
-                return $"{typeName}.{field.Name}";
+                return null;
             }
+
+            hasNull |= element.IsNull;
+            elements.Append(elements.Length == 0 ? string.Empty : ", ").Append(text);
         }
 
-        return $"({typeName})({((IFormattable)constant.Value!).ToString(null, CultureInfo.InvariantCulture)})";
-    }
-
-    private static string FormatSingle(float value)
-    {
-        if (Single.IsNaN(value))
+        var elementType = arrayType.ElementType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        if (hasNull && arrayType.ElementType.IsReferenceType)
         {
-            return "float.NaN";
+            elementType += "?";
         }
 
-        if (Single.IsPositiveInfinity(value))
-        {
-            return "float.PositiveInfinity";
-        }
-
-        if (Single.IsNegativeInfinity(value))
-        {
-            return "float.NegativeInfinity";
-        }
-
-        return value.ToString("R", CultureInfo.InvariantCulture) + "f";
-    }
-
-    private static string FormatDouble(double value)
-    {
-        if (Double.IsNaN(value))
-        {
-            return "double.NaN";
-        }
-
-        if (Double.IsPositiveInfinity(value))
-        {
-            return "double.PositiveInfinity";
-        }
-
-        if (Double.IsNegativeInfinity(value))
-        {
-            return "double.NegativeInfinity";
-        }
-
-        return value.ToString("R", CultureInfo.InvariantCulture) + "d";
+        return constant.Values.Length == 0
+            ? "new " + elementType + "[0]"
+            : "new " + elementType + "[] { " + elements + " }";
     }
 }

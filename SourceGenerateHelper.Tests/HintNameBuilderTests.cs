@@ -1,5 +1,13 @@
 namespace SourceGenerateHelper.Tests;
 
+using System.Collections.Immutable;
+using System.Text;
+
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
+
+using SourceGenerateHelper.Testing;
+
 public sealed class HintNameBuilderTests
 {
     //-----------------------------------------------------------------------
@@ -123,5 +131,93 @@ public sealed class HintNameBuilderTests
         Assert.Equal(
             "Test_Ns_SampleMappers_EntityA_MyProfile.AspNetCore.g.cs",
             HintNameBuilder.BuildWithExtension("Test.Ns", ".AspNetCore.g.cs", "SampleMappers", "EntityA", "MyProfile"));
+    }
+
+    //-----------------------------------------------------------------------
+    // Type
+    //-----------------------------------------------------------------------
+
+    private const string TypeSource =
+        """
+        namespace Test.Ns
+        {
+            public class Outer
+            {
+                public class Inner { }
+                public class Generic<T> { }
+            }
+
+            public class Item { }
+            public class Item<T> { }
+            public class Under_Score { }
+        }
+
+        namespace Test.Other
+        {
+            public class Item { }
+        }
+
+        public class Global { }
+        """;
+
+    private static INamedTypeSymbol GetType(string metadataName) =>
+        TestCompilation.Create(TypeSource).GetTypeByMetadataName(metadataName)!;
+
+    [Theory]
+    [InlineData("Test.Ns.Outer", "Test_Ns_Outer.g.cs")]
+    [InlineData("Test.Ns.Outer+Inner", "Test_Ns_Outer+Inner.g.cs")]
+    [InlineData("Test.Ns.Outer+Generic`1", "Test_Ns_Outer+Generic`1.g.cs")]
+    [InlineData("Test.Ns.Item`1", "Test_Ns_Item`1.g.cs")]
+    [InlineData("Test.Ns.Under_Score", "Test_Ns_Under-Score.g.cs")]
+    [InlineData("Global", "Global.g.cs")]
+    public void TypeNameHasNamespaceNestingAndArity(string metadataName, string expected)
+    {
+        Assert.Equal(expected, HintNameBuilder.BuildFromType(GetType(metadataName)));
+    }
+
+    [Fact]
+    public void TypeNameTakesPartsAndExtension()
+    {
+        Assert.Equal("Test_Ns_Outer+Inner_Accessor.g.cs", HintNameBuilder.BuildFromType(GetType("Test.Ns.Outer+Inner"), "Accessor"));
+        Assert.Equal("Test_Ns_Item.AspNetCore.g.cs", HintNameBuilder.BuildFromTypeWithExtension(GetType("Test.Ns.Item"), ".AspNetCore.g.cs"));
+    }
+
+    private static readonly string[] SameNameTypes = ["Test.Ns.Item", "Test.Ns.Item`1", "Test.Other.Item", "Test.Ns.Outer+Inner"];
+
+    [Fact]
+    public void TypesOfOneNameGetTheirOwnNames()
+    {
+        var names = SameNameTypes.Select(static x => HintNameBuilder.BuildFromType(GetType(x))).ToList();
+
+        Assert.Equal(names.Count, names.Distinct(StringComparer.OrdinalIgnoreCase).Count());
+    }
+
+    [Fact]
+    public void TypeNamesAreAcceptedAsHintNames()
+    {
+        var result = new GeneratorTestRunner(new TypeFileGenerator()).Run(TypeSource);
+
+        Assert.Empty(result.Problems);
+        Assert.Contains("Test_Ns_Outer+Generic`1.g.cs", result.GeneratedSources.Keys);
+    }
+
+    internal sealed class TypeFileGenerator : IIncrementalGenerator
+    {
+        public void Initialize(IncrementalGeneratorInitializationContext context)
+        {
+            var names = context.CompilationProvider.Select(static (compilation, _) =>
+                compilation.Assembly.GlobalNamespace.GetTypeMembersRecursive()
+                    .SelectMany(static x => x.GetTypeMembers().Prepend(x))
+                    .Select(static x => HintNameBuilder.BuildFromType(x))
+                    .ToImmutableArray());
+
+            context.RegisterSourceOutput(names, static (production, items) =>
+            {
+                foreach (var name in items)
+                {
+                    production.AddSource(name, SourceText.From("// generated", Encoding.UTF8));
+                }
+            });
+        }
     }
 }

@@ -10,6 +10,22 @@ public record LocationInfo(string FilePath, TextSpan TextSpan, LinePositionSpan 
     public Location ToLocation() =>
         Location.Create(FilePath, TextSpan, LineSpan);
 
+    public Location ToLocation(ImmutableArray<SyntaxTree> trees)
+    {
+        if (!trees.IsDefaultOrEmpty)
+        {
+            foreach (var tree in trees)
+            {
+                if (String.Equals(tree.FilePath, FilePath, StringComparison.Ordinal))
+                {
+                    return Location.Create(tree, TextSpan);
+                }
+            }
+        }
+
+        return ToLocation();
+    }
+
     public static LocationInfo? CreateFrom(SyntaxNode node) =>
         CreateFrom(node.GetLocation());
 
@@ -87,6 +103,9 @@ public sealed record DiagnosticInfo
 
     // ReSharper disable once CoVariantArrayConversion
     public Diagnostic ToDiagnostic() => Diagnostic.Create(Descriptor, Location?.ToLocation(), Properties, MessageArgs);
+
+    // ReSharper disable once CoVariantArrayConversion
+    public Diagnostic ToDiagnostic(ImmutableArray<SyntaxTree> trees) => Diagnostic.Create(Descriptor, Location?.ToLocation(trees), Properties, MessageArgs);
 
     public bool Equals(DiagnosticInfo? other)
     {

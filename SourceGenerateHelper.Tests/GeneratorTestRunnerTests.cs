@@ -280,6 +280,112 @@ public sealed class GeneratorTestRunnerTests
         Assert.Equal(expected, reason.IsChanged());
     }
 
+    [Fact]
+    public void WhenEditIsUnrelatedThenOutputIsNotChanged()
+    {
+        var result = GeneratorTestRunner.For<MarkerGenerator>()
+            .WithTracking()
+            .RunIncrementalEdit(TargetSource, TargetSource + "\npublic class Unrelated { }");
+
+        Assert.Equal(result.FirstGeneratedText, result.SecondGeneratedText);
+        Assert.DoesNotContain(result.OutputReasons, static x => x.IsChanged());
+        Assert.NotEmpty(result.StepReasons("MarkerTarget"));
+        Assert.DoesNotContain(result.StepReasons("MarkerTarget"), static x => x.IsChanged());
+    }
+
+    [Fact]
+    public void WhenEditRenamesTargetThenOutputIsChanged()
+    {
+        var result = GeneratorTestRunner.For<MarkerGenerator>()
+            .WithTracking()
+            .RunIncrementalEdit(TargetSource, AttributeOnly + "[Marker] public class Renamed { }");
+
+        Assert.Contains("// generated for Renamed", result.SecondGeneratedText, StringComparison.Ordinal);
+        Assert.Contains(result.OutputReasons, static x => x.IsChanged());
+        Assert.Contains(result.StepReasons("MarkerTarget"), static x => x.IsChanged());
+    }
+
+    [Fact]
+    public void WhenTrackingIsDisabledThenRunIncrementalEditThrows()
+    {
+        var runner = GeneratorTestRunner.For<MarkerGenerator>();
+
+        Assert.Throws<InvalidOperationException>(() => runner.RunIncrementalEdit(TargetSource, TargetSource));
+    }
+
+    [Fact]
+    public void WhenStepIsNotTrackedThenStepReasonsAreEmpty()
+    {
+        var result = GeneratorTestRunner.For<MarkerGenerator>()
+            .WithTracking()
+            .RunIncrementalEdit(TargetSource, TargetSource);
+
+        Assert.Empty(result.StepReasons("Missing"));
+    }
+
+    // ------------------------------------------------------------
+    // Problems
+    // ------------------------------------------------------------
+
+    [Fact]
+    public void WhenOutputIsValidThenProblemsAreEmpty()
+    {
+        Assert.Empty(GeneratorTestRunner.For<MarkerGenerator>().GetProblems(TargetSource));
+    }
+
+    [Fact]
+    public void WhenGeneratorReportsThenDiagnosticIsProblem()
+    {
+        var problems = GeneratorTestRunner.For<MarkerGenerator>().GetProblems(AttributeOnly + "[Marker] public class Invalid { }");
+
+        Assert.Equal(["TST0001"], problems.Select(static x => x.Id));
+    }
+
+    [Fact]
+    public void WhenGeneratorThrowsThenExceptionIsProblem()
+    {
+        var result = new GeneratorTestRunner(new ThrowingGenerator()).Run(TargetSource);
+
+        Assert.Equal(["CS8785"], result.Problems.Select(static x => x.Id));
+        Assert.IsType<InvalidOperationException>(Assert.Single(result.GeneratorExceptions));
+    }
+
+    [Fact]
+    public void WhenGeneratorThrowsThenPrefixKeepsException()
+    {
+        var diagnostics = new GeneratorTestRunner(new ThrowingGenerator())
+            .WithDiagnosticPrefix("TST")
+            .GetDiagnostics(TargetSource);
+
+        Assert.Equal("CS8785", Assert.Single(diagnostics).Id);
+    }
+
+    [Fact]
+    public void WhenGeneratedFileWarnsThenWarningIsProblem()
+    {
+        var problems = new GeneratorTestRunner(new WarningGenerator()).GetProblems(TargetSource + "\npublic class User { public void M() { int unused; } }");
+
+        var warning = Assert.Single(problems);
+        Assert.Equal("CS0168", warning.Id);
+        Assert.EndsWith("Warning.g.cs", warning.Location.SourceTree!.FilePath, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void WhenSourceHasErrorThenErrorIsProblem()
+    {
+        var problems = GeneratorTestRunner.For<MarkerGenerator>().GetProblems(TargetSource + "\npublic class Broken { int x = ; }");
+
+        Assert.Contains(problems, static x => x.Severity == DiagnosticSeverity.Error);
+    }
+
+    [Fact]
+    public void WhenMessageIsNotFormattedThenProblemIsAdded()
+    {
+        var problems = new GeneratorTestRunner(new UnformattedGenerator()).GetProblems(TargetSource);
+
+        Assert.Equal(["TST0003", GeneratorTestResult.UnformattedMessageId], problems.Select(static x => x.Id));
+    }
+
     // ------------------------------------------------------------
     // Fixtures
     // ------------------------------------------------------------
@@ -319,6 +425,52 @@ public sealed class GeneratorTestRunnerTests
 
                 production.AddSource($"{name}.g.cs", SourceText.From($"// generated for {name}", Encoding.UTF8));
             });
+        }
+    }
+
+    internal sealed class ThrowingGenerator : IIncrementalGenerator
+    {
+        public void Initialize(IncrementalGeneratorInitializationContext context)
+        {
+            var provider = context.SyntaxProvider
+                .ForAttributeWithMetadataName(
+                    "MarkerAttribute",
+                    static (_, _) => true,
+                    static (syntaxContext, _) => syntaxContext.TargetSymbol.Name);
+
+            context.RegisterSourceOutput(provider, static (_, _) => throw new InvalidOperationException("Broken generator"));
+        }
+    }
+
+    internal sealed class WarningGenerator : IIncrementalGenerator
+    {
+        public void Initialize(IncrementalGeneratorInitializationContext context)
+        {
+            context.RegisterPostInitializationOutput(static production =>
+                production.AddSource("Warning.g.cs", SourceText.From("public class Generated { public void M() { int unused; } }", Encoding.UTF8)));
+        }
+    }
+
+    internal sealed class UnformattedGenerator : IIncrementalGenerator
+    {
+        private static DiagnosticDescriptor TwoArguments { get; } = new(
+            id: "TST0003",
+            title: "Two arguments",
+            messageFormat: "Value {0} and {1}",
+            category: "Usage",
+            defaultSeverity: DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
+        public void Initialize(IncrementalGeneratorInitializationContext context)
+        {
+            var provider = context.SyntaxProvider
+                .ForAttributeWithMetadataName(
+                    "MarkerAttribute",
+                    static (_, _) => true,
+                    static (syntaxContext, _) => syntaxContext.TargetSymbol.Name);
+
+            context.RegisterSourceOutput(provider, static (production, name) =>
+                production.ReportDiagnostic(Diagnostic.Create(TwoArguments, Location.None, name)));
         }
     }
 

@@ -80,20 +80,20 @@ public static class SourceBuilderExtensions
         builder.Append(accessibility.ToText());
 
     public static SourceBuilder Type(this SourceBuilder builder, ITypeSymbol type) =>
-        builder.Append(type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+        builder.Append(type.ToDisplayString(SymbolDisplayFormats.FullyQualifiedNullable));
 
     public static SourceBuilder Argument(this SourceBuilder builder, ITypeSymbol type, string name) =>
-        builder.Type(type).Append(' ').Append(name);
+        builder.Type(type).Append(' ').Append(CSharpIdentifier.Escape(name));
 
     public static SourceBuilder Argument(this SourceBuilder builder, string type, string name) =>
-        builder.Append(type).Append(' ').Append(name);
+        builder.Append(type).Append(' ').Append(CSharpIdentifier.Escape(name));
 
     public static SourceBuilder Arguments(this SourceBuilder builder, IEnumerable<(ITypeSymbol Type, string Name)> source)
     {
         var append = false;
         foreach (var (type, name) in source)
         {
-            builder.Type(type).Append(' ').Append(name).Append(", ");
+            builder.Type(type).Append(' ').Append(CSharpIdentifier.Escape(name)).Append(", ");
             append = true;
         }
 
@@ -110,7 +110,7 @@ public static class SourceBuilderExtensions
         var append = false;
         foreach (var (type, name) in source)
         {
-            builder.Append(type).Append(' ').Append(name).Append(", ");
+            builder.Append(type).Append(' ').Append(CSharpIdentifier.Escape(name)).Append(", ");
             append = true;
         }
 
@@ -175,7 +175,7 @@ public static class SourceBuilderExtensions
 
     public static SourceBuilder Local(this SourceBuilder builder, string type, string name, string? value = null)
     {
-        builder.Indent().Append(type).Append(' ').Append(name);
+        builder.Indent().Append(type).Append(' ').Append(CSharpIdentifier.Escape(name));
         if (value is not null)
         {
             builder.Append(" = ").Append(value);
@@ -194,7 +194,7 @@ public static class SourceBuilderExtensions
         builder.Indent().Append("#pragma warning disable ").Append(id).NewLine();
 
     public static SourceBuilder Namespace(this SourceBuilder builder, string ns) =>
-        builder.Indent().Append("namespace ").Append(ns).Append(';').NewLine();
+        builder.Indent().Append("namespace ").Append(CSharpIdentifier.EscapeQualifiedName(ns)).Append(';').NewLine();
 
     public static SourceBuilder Using(this SourceBuilder builder, string ns) =>
         builder.Indent().Append("using ").Append(ns).Append(';').NewLine();
@@ -234,7 +234,7 @@ public static class SourceBuilderExtensions
 
     public static SourceBuilder Property(this SourceBuilder builder, ITypeSymbol type, string name, string? initializer = null)
     {
-        builder.Indent().Append("public ").Type(type).Append(' ').Append(name).Append(" { get; set; }");
+        builder.Indent().Append("public ").Type(type).Append(' ').Append(CSharpIdentifier.Escape(name)).Append(" { get; set; }");
         if (initializer is not null)
         {
             builder.Append(" = ").Append(initializer).Append(';');
@@ -245,18 +245,18 @@ public static class SourceBuilderExtensions
 
     public static SourceBuilder Property(this SourceBuilder builder, string type, string name, string? initializer = null)
     {
-        builder.Indent().Append("public ").Append(type).Append(' ').Append(name).Append(" { get; set; }");
+        builder.Indent().Append("public ").Append(type).Append(' ').Append(CSharpIdentifier.Escape(name)).Append(" { get; set; }");
         if (initializer is not null)
         {
-            builder.Append(" = ").Append(initializer);
+            builder.Append(" = ").Append(initializer).Append(';');
         }
-        builder.Append(';').NewLine();
+        builder.NewLine();
         return builder;
     }
 
     public static SourceBuilder Field(this SourceBuilder builder, ITypeSymbol type, string name, string? initializer = null)
     {
-        builder.Indent().Append("private ").Type(type).Append(' ').Append(name);
+        builder.Indent().Append("private ").Type(type).Append(' ').Append(CSharpIdentifier.Escape(name));
         if (initializer is not null)
         {
             builder.Append(" = ").Append(initializer);
@@ -267,7 +267,7 @@ public static class SourceBuilderExtensions
 
     public static SourceBuilder Field(this SourceBuilder builder, string type, string name, string? initializer = null)
     {
-        builder.Indent().Append("private ").Append(type).Append(' ').Append(name);
+        builder.Indent().Append("private ").Append(type).Append(' ').Append(CSharpIdentifier.Escape(name));
         if (initializer is not null)
         {
             builder.Append(" = ").Append(initializer);

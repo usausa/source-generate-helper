@@ -1,6 +1,7 @@
 namespace SourceGenerateHelper.Testing;
 
 using System.Collections.Generic;
+using System.Linq;
 
 using Microsoft.CodeAnalysis;
 
@@ -29,4 +30,11 @@ public sealed class IncrementalRunResult
         SecondGeneratedText = secondGeneratedText;
         OutputReasons = outputReasons;
     }
+
+    public IReadOnlyList<IncrementalStepRunReason> StepReasons(string stepName) =>
+        SecondResult.Results
+            .SelectMany(x => x.TrackedSteps.TryGetValue(stepName, out var steps) ? steps : [])
+            .SelectMany(static x => x.Outputs)
+            .Select(static x => x.Reason)
+            .ToList();
 }

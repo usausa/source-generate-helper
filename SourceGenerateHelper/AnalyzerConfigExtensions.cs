@@ -66,6 +66,24 @@ public static class AnalyzerConfigExtensions
         }
     }
 
+    public static bool TryGetValue<T>(this AnalyzerConfigOptions options, string key, out T value, out string? invalidValue)
+    {
+        invalidValue = null;
+        if (options.TryGetValue(key, out value))
+        {
+            return true;
+        }
+
+        if ((typeof(T) != typeof(string)) &&
+            options.TryGetValue($"build_property.{key}", out var raw) &&
+            !String.IsNullOrEmpty(raw))
+        {
+            invalidValue = raw;
+        }
+
+        return false;
+    }
+
     private static T ConvertValue<T>(string value)
     {
         var targetType = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);

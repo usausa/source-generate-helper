@@ -10,6 +10,7 @@ using System.Text;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Text;
 
 public sealed class GeneratorTestRunner
 {
@@ -191,6 +192,31 @@ public sealed class GeneratorTestRunner
             CollectOutputReasons(second));
     }
 
+    public IncrementalRunResult RunIncrementalEdit(string source, string editedSource)
+    {
+        if (!trackSteps)
+        {
+            throw new InvalidOperationException($"{nameof(RunIncrementalEdit)} requires {nameof(WithTracking)}().");
+        }
+
+        var (driver, compilation) = CreateDriver(source);
+
+        driver = driver.RunGenerators(compilation);
+        var first = driver.GetRunResult();
+
+        var tree = compilation.SyntaxTrees.First();
+        var edited = tree.WithChangedText(SourceText.From(editedSource, Encoding.UTF8));
+        driver = driver.RunGenerators(compilation.ReplaceSyntaxTree(tree, edited));
+        var second = driver.GetRunResult();
+
+        return new IncrementalRunResult(
+            first,
+            second,
+            CollectGeneratedText(first),
+            CollectGeneratedText(second),
+            CollectOutputReasons(second));
+    }
+
     public (GeneratorDriver Driver, Compilation Compilation) CreateDriver(string source)
     {
         _ = DependenciesLoaded.Value;
@@ -219,6 +245,8 @@ public sealed class GeneratorTestRunner
     public string GetGeneratedSource(string source) => Run(source).FirstGeneratedSource;
 
     public IReadOnlyList<Diagnostic> GetDiagnostics(string source) => Run(source).Diagnostics(diagnosticPrefixes);
+
+    public IReadOnlyList<Diagnostic> GetProblems(string source) => Run(source).Problems;
 
     public IReadOnlyList<Diagnostic> GetDiagnosticsAll(string source)
     {

@@ -2,12 +2,23 @@ namespace SourceGenerateHelper;
 
 using System.Text;
 
+using Microsoft.CodeAnalysis;
+
 public static class HintNameBuilder
 {
     public const string DefaultExtension = ".g.cs";
 
     public static string Build(string? ns, params string[] parts) =>
         BuildWithExtension(ns, DefaultExtension, parts);
+
+    public static string BuildFromType(INamedTypeSymbol type, params string[] parts) =>
+        BuildFromTypeWithExtension(type, DefaultExtension, parts);
+
+    public static string BuildFromTypeWithExtension(INamedTypeSymbol type, string extension, params string[] parts)
+    {
+        var ns = type.ContainingNamespace is { IsGlobalNamespace: false } containing ? containing.ToDisplayString() : null;
+        return BuildWithExtension(ns, extension, [GetTypePart(type), .. parts]);
+    }
 
     public static string BuildWithExtension(string? ns, string extension, params string[] parts)
     {
@@ -40,6 +51,9 @@ public static class HintNameBuilder
 
         return buffer.ToString();
     }
+
+    private static string GetTypePart(INamedTypeSymbol type) =>
+        type.ContainingType is null ? type.MetadataName : GetTypePart(type.ContainingType) + "+" + type.MetadataName;
 
     private static void AppendEscaped(StringBuilder buffer, string value)
     {

@@ -1,10 +1,23 @@
 namespace SourceGenerateHelper;
 
+using System.Collections.Immutable;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 public static class IncrementalGeneratorInitializationContextExtensions
 {
+    public static IncrementalValueProvider<ImmutableArray<SyntaxTree>> ForAttributeWithMetadataNameSyntaxTrees(
+        this IncrementalGeneratorInitializationContext context,
+        string fullyQualifiedMetadataName,
+        Func<SyntaxNode, CancellationToken, bool> predicate) =>
+        context.SyntaxProvider
+            .ForAttributeWithMetadataName(
+                fullyQualifiedMetadataName,
+                predicate,
+                static (syntaxContext, _) => syntaxContext.TargetNode.SyntaxTree)
+            .Collect();
+
     public static IncrementalValuesProvider<T> ForAttributeWithMetadataNameWithOptions<T>(
         this IncrementalGeneratorInitializationContext context,
         string fullyQualifiedMetadataName,
