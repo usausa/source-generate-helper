@@ -47,7 +47,6 @@ public static class SymbolExtensions
     // Type
     // ------------------------------------------------------------
 
-    // Arity, as IsGenericType is also true for a type nested in a generic one
     public static string GetClassName(this INamedTypeSymbol symbol) =>
         symbol.Arity > 0
             ? $"{CSharpIdentifier.EscapeTypeName(symbol.Name)}<{String.Join(", ", symbol.TypeArguments.Select(static x => CSharpIdentifier.EscapeTypeName(x.Name)))}>"
@@ -66,8 +65,11 @@ public static class SymbolExtensions
             _ => "class"
         };
 
+    // Every part repeats the variance of the type parameters (CS1067)
     public static string GetPartialDeclaration(this INamedTypeSymbol symbol) =>
-        "partial " + symbol.GetDeclarationKeyword() + " " + symbol.GetClassName();
+        symbol.Arity > 0
+            ? $"partial {symbol.GetDeclarationKeyword()} {CSharpIdentifier.EscapeTypeName(symbol.Name)}<{String.Join(", ", symbol.TypeParameters.Select(static x => GetVarianceKeyword(x.Variance) + CSharpIdentifier.EscapeTypeName(x.Name)))}>"
+            : "partial " + symbol.GetDeclarationKeyword() + " " + symbol.GetClassName();
 
     public static IReadOnlyList<INamedTypeSymbol> GetContainingTypes(this INamedTypeSymbol symbol)
     {
@@ -431,6 +433,14 @@ public static class SymbolExtensions
     // ------------------------------------------------------------
     // Helper
     // ------------------------------------------------------------
+
+    private static string GetVarianceKeyword(VarianceKind variance) =>
+        variance switch
+        {
+            VarianceKind.In => "in ",
+            VarianceKind.Out => "out ",
+            _ => string.Empty
+        };
 
     private static bool EndsWith(string text, int end, string value) =>
         (end >= value.Length) && (String.CompareOrdinal(text, end - value.Length, value, 0, value.Length) == 0);

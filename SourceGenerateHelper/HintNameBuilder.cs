@@ -59,6 +59,12 @@ public static class HintNameBuilder
     {
         foreach (var c in value)
         {
+            // The @ of a keyword is not taken in a hint name (ArgumentException)
+            if (c == '@')
+            {
+                continue;
+            }
+
             buffer.Append(c switch
             {
                 '.' => '_',

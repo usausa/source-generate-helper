@@ -730,6 +730,7 @@ public sealed class SymbolExtensionsTests
             public record struct RecStruct;
             public readonly partial struct ReadOnly { }
             public interface IItem { }
+            public partial interface IVariant<in TIn, out TOut, T> { }
             public class BaseWithGeneric<T> { }
             public class DerivedFromGeneric : BaseWithGeneric<int> { }
             public class DerivedFromInner : Outer.Inner { }
@@ -791,11 +792,22 @@ public sealed class SymbolExtensionsTests
     [InlineData("MyNs.RecStruct", "partial record struct RecStruct")]
     [InlineData("MyNs.ReadOnly", "partial struct ReadOnly")]
     [InlineData("MyNs.IItem", "partial interface IItem")]
+    [InlineData("MyNs.IVariant`3", "partial interface IVariant<in TIn, out TOut, T>")]
+    [InlineData("MyNs.class", "partial class @class")]
     public void GetPartialDeclarationWritesKindAndName(string metadataName, string expected)
     {
         var compilation = TestCompilation.Create(NameSource);
 
         Assert.Equal(expected, compilation.GetTypeByMetadataName(metadataName)!.GetPartialDeclaration());
+    }
+
+    [Fact]
+    public void PartialDeclarationOfVariantInterfaceCompiles()
+    {
+        var compilation = TestCompilation.Create(NameSource);
+        var declaration = compilation.GetTypeByMetadataName("MyNs.IVariant`3")!.GetPartialDeclaration();
+
+        Assert.Empty(TestCompilation.GetProblems(TestCompilation.AddSource(compilation, $"namespace MyNs {{ {declaration} {{ }} }}")));
     }
 
     [Fact]

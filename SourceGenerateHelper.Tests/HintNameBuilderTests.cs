@@ -34,6 +34,12 @@ public sealed class HintNameBuilderTests
     }
 
     [Fact]
+    public void AtOfKeywordIsRemoved()
+    {
+        Assert.Equal("Test_event_class.g.cs", HintNameBuilder.Build("Test.@event", "@class"));
+    }
+
+    [Fact]
     public void UnderscoresInNamesBecomeHyphens()
     {
         Assert.Equal("Test_Outer-Inner.g.cs", HintNameBuilder.Build("Test", "Outer_Inner"));
@@ -157,6 +163,11 @@ public sealed class HintNameBuilderTests
             public class Item { }
         }
 
+        namespace Test.@event
+        {
+            public class @class { }
+        }
+
         public class Global { }
         """;
 
@@ -169,6 +180,7 @@ public sealed class HintNameBuilderTests
     [InlineData("Test.Ns.Outer+Generic`1", "Test_Ns_Outer+Generic`1.g.cs")]
     [InlineData("Test.Ns.Item`1", "Test_Ns_Item`1.g.cs")]
     [InlineData("Test.Ns.Under_Score", "Test_Ns_Under-Score.g.cs")]
+    [InlineData("Test.event.class", "Test_event_class.g.cs")]
     [InlineData("Global", "Global.g.cs")]
     public void TypeNameHasNamespaceNestingAndArity(string metadataName, string expected)
     {
