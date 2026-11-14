@@ -1,6 +1,5 @@
 // ReSharper disable All
 #pragma warning disable
-#if !NET5_0_OR_GREATER
 namespace System.Diagnostics.CodeAnalysis;
 
 [AttributeUsage(AttributeTargets.Parameter, Inherited = false)]
@@ -24,5 +23,4 @@ internal sealed class NotNullWhenAttribute : Attribute
 
     public bool ReturnValue { get; }
 }
-#endif
 #pragma warning restore

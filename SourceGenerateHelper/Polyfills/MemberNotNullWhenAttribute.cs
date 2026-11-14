@@ -1,6 +1,5 @@
 // ReSharper disable All
 #pragma warning disable
-#if !NET5_0_OR_GREATER
 namespace System.Diagnostics.CodeAnalysis;
 
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, Inherited = false, AllowMultiple = true)]
@@ -22,5 +21,4 @@ internal sealed class MemberNotNullWhenAttribute : Attribute
 
     public string[] Members { get; }
 }
-#endif
 #pragma warning restore
